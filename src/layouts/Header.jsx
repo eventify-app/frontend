@@ -1,7 +1,7 @@
 
 const Header = () => {
   return (
-    <header className="fixed top-0 w-full p-3 bg-background border-b border-primary/10">
+    <header className="fixed top-0 w-full px-3 py-4 bg-background border-b border-primary/10">
       <div className="max-w-7xl flex justify-between m-auto">
 
         <a className="flex items-center" href="">
