@@ -1,5 +1,25 @@
+import { useState, useRef, useEffect } from "react"
+import { NavLink } from "react-router-dom"
+import { useAuth } from "../context/AuthContext"
 
 const Header = () => {
+  const { token } = useAuth()
+  const [openMenu, setOpenMenu] = useState(false)
+  const menuRef = useRef()
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setOpenMenu(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
+
   return (
     <header className="fixed top-0 w-full px-3 py-4 bg-background border-b border-primary/10">
       <div className="max-w-7xl flex justify-between m-auto">
@@ -12,10 +32,65 @@ const Header = () => {
           <h2 className="text-xl font-bold">Eventify</h2>
         </a>
 
+        {
+          token
+          && (
+            <div className="flex items-center gap-5 text-sm font-bold text-gray-600">
+              <a className="hover:text-primary" href="/explorer">Explorar</a>
+              <a className="hover:text-primary" href="/calendar">Calendario</a>
+              <a className="hover:text-primary" href="/my-events">Mis eventos</a>
+            </div>
+          )
+        }
 
         <div className="flex gap-5 items-center">
-          <a href="#" className="font-bold text-primary hover:text-primary/75">Ingresar</a>
-          <button className="cursor-pointer p-3 bg-primary transition-colors hover:bg-primary/80 font-bold shadow-lg shadow-primary/20 text-white rounded-full">Registrarse</button>
+          {
+            token
+          ? (
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setOpenMenu(!openMenu)}
+                className="focus:outline-none"
+              >
+                <img
+                  src="https://i.pravatar.cc/40"
+                  alt="Avatar"
+                  className="h-12 w-12 rounded-full border-2 border-primary"
+                />
+              </button>
+
+              {openMenu && (
+                <div className="absolute -left-16 mt-2 w-44 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                  <div className="py-2">
+                    <NavLink
+                      to="/profile"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Ver perfil
+                    </NavLink>
+                    <button
+                      onClick={() => {
+                        // logout
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Cerrar sesión
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+          : (
+              <>
+                <a href="/login" className="font-bold text-primary hover:text-primary/75">Ingresar</a>
+                <a href="/register">
+                  <button className="cursor-pointer p-3 bg-primary transition-colors hover:bg-primary/80 font-bold shadow-lg shadow-primary/20 text-white rounded-full">Registrarse</button>
+                </a>
+              </>
+            )
+          }
+          
         </div>
       </div>
     </header>
