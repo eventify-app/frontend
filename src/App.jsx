@@ -2,6 +2,11 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Home from './pages/Home'
 import Login from './pages/Login'
 
+import Registro from './pages/Register'
+import Terminos from './pages/Terminos'
+import Privacidad from './pages/Privacidad'
+
+
 function App() {
   return (
     <>
@@ -9,6 +14,10 @@ function App() {
         <Routes>
           <Route path='/' element={<Home />} />
           <Route path='/login' element={<Login />} />
+
+          <Route path="/register" element={<Registro />} />
+          <Route path="/terminos" element={<Terminos />} />
+          <Route path="/privacidad" element={<Privacidad />} />
         </Routes>
       </BrowserRouter>
     </>
@@ -16,3 +25,7 @@ function App() {
 }
 
 export default App
+
+
+
+
