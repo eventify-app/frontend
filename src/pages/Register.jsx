@@ -113,7 +113,7 @@ const Register = () => {
                 email: datosFormulario.correo,
                 password: datosFormulario.contraseña,
                 date_of_birth: datosFormulario.fechaNacimiento,
-                phone: datosFormulario.telefono,
+                phone: datosFormulario.telefono.trim() === "" ? null : datosFormulario.telefono,
             }
 
             const respuesta = await axiosInstance.post("/users/register/", datos)
