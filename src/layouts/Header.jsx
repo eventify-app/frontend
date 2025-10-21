@@ -1,11 +1,14 @@
 import { useState, useRef, useEffect } from "react"
-import { NavLink } from "react-router-dom"
+import { NavLink, useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
+import { authService } from "../api/services/authService"
 
 const Header = () => {
-  const { token } = useAuth()
+  const { token, setToken } = useAuth()
   const [openMenu, setOpenMenu] = useState(false)
   const menuRef = useRef()
+  const navigate = useNavigate()
+
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -19,6 +22,13 @@ const Header = () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
   }, [])
+
+  // Función centralizada de logout
+  const handleLogout = () => {
+    authService.logout(); // llama al servicio que limpia el token
+    setToken(null);       // limpia el contexto
+    navigate("/");        // redirige al inicio (usando useNavigate)
+  };
 
   return (
     <header className="fixed top-0 w-full px-3 py-4 bg-background border-b border-primary/10">
@@ -46,51 +56,49 @@ const Header = () => {
         <div className="flex gap-5 items-center">
           {
             token
-          ? (
-            <div className="relative" ref={menuRef}>
-              <button
-                onClick={() => setOpenMenu(!openMenu)}
-                className="focus:outline-none"
-              >
-                <img
-                  src="https://i.pravatar.cc/40"
-                  alt="Avatar"
-                  className="h-12 w-12 rounded-full border-2 border-primary"
-                />
-              </button>
+              ? (
+                <div className="relative" ref={menuRef}>
+                  <button
+                    onClick={() => setOpenMenu(!openMenu)}
+                    className="focus:outline-none"
+                  >
+                    <img
+                      src="https://i.pravatar.cc/40"
+                      alt="Avatar"
+                      className="h-12 w-12 rounded-full border-2 border-primary"
+                    />
+                  </button>
 
-              {openMenu && (
-                <div className="absolute -left-16 mt-2 w-44 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
-                  <div className="py-2">
-                    <NavLink
-                      to="/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Ver perfil
-                    </NavLink>
-                    <button
-                      onClick={() => {
-                        // logout
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Cerrar sesión
-                    </button>
-                  </div>
+                  {openMenu && (
+                    <div className="absolute -left-16 mt-2 w-44 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                      <div className="py-2">
+                        <NavLink
+                          to="/profile"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Ver perfil
+                        </NavLink>
+                        <button
+                          onClick={handleLogout} //  Usa la función centralizada
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Cerrar sesión
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          )
-          : (
-              <>
-                <a href="/login" className="font-bold text-primary hover:text-primary/75">Ingresar</a>
-                <a href="/register">
-                  <button className="cursor-pointer p-3 bg-primary transition-colors hover:bg-primary/80 font-bold shadow-lg shadow-primary/20 text-white rounded-full">Registrarse</button>
-                </a>
-              </>
-            )
+              )
+              : (
+                <>
+                  <a href="/login" className="font-bold text-primary hover:text-primary/75">Ingresar</a>
+                  <a href="/register">
+                    <button className="cursor-pointer p-3 bg-primary transition-colors hover:bg-primary/80 font-bold shadow-lg shadow-primary/20 text-white rounded-full">Registrarse</button>
+                  </a>
+                </>
+              )
           }
-          
+
         </div>
       </div>
     </header>
