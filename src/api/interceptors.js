@@ -22,7 +22,7 @@ export const setupInterceptors = (axiosInstance) => {
 
       if (status === 401) {
         localStorage.removeItem("token");
-        window.location.href = "/login";
+        //window.location.href = "/login";
       }
 
       return Promise.reject(error);
