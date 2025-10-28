@@ -8,6 +8,7 @@ import Login from './pages/Login'
 import Registro from './pages/Register'
 import Terminos from './pages/Terminos'
 import Privacidad from './pages/Privacidad'
+import CreateEvent from './pages/CreateEvent'
 
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
           <Route path="/register" element={<Registro />} />
           <Route path="/terminos" element={<Terminos />} />
           <Route path="/privacidad" element={<Privacidad />} />
+          <Route path="/create-event" element={<CreateEvent />} />
         </Routes>
       </BrowserRouter>
     </>
