@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { eventService } from "../api/services/eventService";
 import Main from "../layouts/Main";
 
-const CreateEvent = () => {
+const EventForm = ({ isEditMode = false }) => {
   const navigate = useNavigate();
-  const location = useLocation(); // Para recibir datos al editar
+  const { id } = useParams(); // id del evento si estamos editando
 
-  // Solo campos editables
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -23,30 +22,36 @@ const CreateEvent = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // 🔹 Precargar datos si es edición
+  // 🔹 Si es modo edición, cargar datos del evento
   useEffect(() => {
-    const eventToEdit = location.state?.eventToEdit;
-    if (eventToEdit) {
-      setFormData({
-        title: eventToEdit.title || "",
-        description: eventToEdit.description || "",
-        place: eventToEdit.place || "",
-        start_date: eventToEdit.start_date || "",
-        start_time: eventToEdit.start_time || "",
-        end_date: eventToEdit.end_date || "",
-        end_time: eventToEdit.end_time || "",
-      });
-      if (eventToEdit.image) setPreview(eventToEdit.image);
+    if (isEditMode && id) {
+      const fetchEvent = async () => {
+        try {
+          const data = await eventService.getEventById(id);
+          setFormData({
+            title: data.title,
+            description: data.description,
+            place: data.place,
+            start_date: data.start_date,
+            start_time: data.start_time,
+            end_date: data.end_date,
+            end_time: data.end_time,
+          });
+          if (data.cover_image) setPreview(data.cover_image);
+        } catch (err) {
+          console.error(err);
+          setError("Error al cargar el evento");
+        }
+      };
+      fetchEvent();
     }
-  }, [location.state]);
+  }, [id, isEditMode]);
 
-  // Manejo de campos normales
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
-  // Manejo de la imagen
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -62,24 +67,23 @@ const CreateEvent = () => {
 
     try {
       const data = new FormData();
-      // 🔹 Solo agregamos los campos editables
       Object.entries(formData).forEach(([key, value]) => {
         data.append(key, value);
       });
-      if (coverImage) data.append("cover_image", coverImage);
+      if (coverImage) {
+        data.append("cover_image", coverImage);
+      }
 
-      if (location.state?.eventToEdit) {
-        // 🔹 Edición: enviamos solo los campos editables, nunca el creador
-        await eventService.updateEvent(location.state.eventToEdit.id, data);
+      if (isEditMode && id) {
+        await eventService.updateEvent(id, data);
       } else {
-        // 🔹 Creación: enviamos solo campos editables + imagen
         await eventService.createEvent(data);
       }
 
       navigate("/my-events");
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.detail || "Error al guardar el evento");
+      setError("Error al guardar el evento");
     } finally {
       setLoading(false);
     }
@@ -89,14 +93,13 @@ const CreateEvent = () => {
     <Main>
       <div className="max-w-3xl mx-auto w-full">
         <h1 className="text-3xl font-bold mb-6 text-center text-gray-900">
-          {location.state?.eventToEdit ? "Editar evento" : "Crear nuevo evento"}
+          {isEditMode ? "Editar evento" : "Crear nuevo evento"}
         </h1>
 
         <form
           onSubmit={handleSubmit}
           className="bg-white p-8 rounded-2xl shadow-md border border-gray-200 space-y-6"
         >
-          {/* Título */}
           <div>
             <label htmlFor="title" className="block font-semibold mb-2">
               Título
@@ -112,7 +115,6 @@ const CreateEvent = () => {
             />
           </div>
 
-          {/* Descripción */}
           <div>
             <label htmlFor="description" className="block font-semibold mb-2">
               Descripción
@@ -128,7 +130,6 @@ const CreateEvent = () => {
             />
           </div>
 
-          {/* Lugar */}
           <div>
             <label htmlFor="place" className="block font-semibold mb-2">
               Lugar
@@ -158,6 +159,20 @@ const CreateEvent = () => {
                 />
               ) : (
                 <>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    stroke="currentColor"
+                    className="size-6 text-gray-500"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"
+                    />
+                  </svg>
                   <p className="mt-2 font-semibold text-gray-700">
                     Subir imagen o banner
                   </p>
@@ -242,9 +257,11 @@ const CreateEvent = () => {
             className="w-full bg-primary text-white font-bold py-4 px-6 rounded-lg text-lg hover:bg-primary/90 transition-colors shadow-md shadow-primary/20 disabled:opacity-60"
           >
             {loading
-              ? "Publicando..."
-              : location.state?.eventToEdit
-              ? "Actualizar evento"
+              ? isEditMode
+                ? "Guardando cambios..."
+                : "Publicando..."
+              : isEditMode
+              ? "Guardar cambios"
               : "Publicar evento"}
           </button>
         </form>
@@ -253,4 +270,4 @@ const CreateEvent = () => {
   );
 };
 
-export default CreateEvent;
+export default EventForm;
