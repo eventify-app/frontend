@@ -43,28 +43,45 @@ const MyEvents = () => {
     setEvents(events.filter((e) => e.id !== id));
   };
 
+  const handleCreate = () => {
+    navigate("/create-event");
+  };
+
   return (
     <Main>
-      <h1 className="text-2xl font-bold mb-6 text-center">Mis Eventos</h1>
-      {events.length === 0 ? (
-        <p className="text-gray-500 text-center">No tienes eventos registrados.</p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl mx-auto">
-          {events.map((event) => (
-            <EventCard
-              key={event.id}
-              title={event.title}
-              description={event.description}
-              date={event.start_date}
-              location={event.place}
-              image={event.image}
-              showOwnerActions={true} // 🔹 Esto habilita Editar y Eliminar
-              onEdit={() => handleEdit(event)}
-              onDelete={() => handleDelete(event.id)}
-            />
-          ))}
+      <div className="w-full max-w-6xl mx-auto px-3 mb-6">
+        {/* Contenedor del título y botón */}
+        <h1 className="text-2xl font-bold mb-4 text-center">Mis Eventos</h1>
+        <div className="mb-6">
+          <button
+            onClick={handleCreate}
+            className="px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition"
+          >
+            Crear Evento
+          </button>
         </div>
-      )}
+
+        {/* Grid de eventos */}
+        {events.length === 0 ? (
+          <p className="text-gray-500 text-center">No tienes eventos registrados.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {events.map((event) => (
+              <EventCard
+                key={event.id}
+                title={event.title}
+                description={event.description}
+                date={event.start_date}
+                location={event.place}
+                image={event.image}
+                showOwnerActions={true} // 🔹 Esto habilita Editar y Eliminar
+                onEdit={() => handleEdit(event)}
+                onDelete={() => handleDelete(event.id)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </Main>
   );
 };
