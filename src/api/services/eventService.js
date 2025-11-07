@@ -12,10 +12,10 @@ export const eventService = {
   },
 
   // Obtener lista de eventos
-  async getEvents() {
-    const res = await axiosInstance.get("/events/");
+  async getEvents(params = {}) {
+    const res = await axiosInstance.get("/events/", { params });
     return res.data;
-  },
+    },
 
   // Obtener un evento por ID
   async getEventById(id) {
@@ -37,5 +37,32 @@ export const eventService = {
   async deleteEvent(id) {
     const res = await axiosInstance.delete(`/events/${id}/`);
     return res.data;
+  },
+
+  async list(url = "/events/", params = {}) {
+    // si la URL tiene dominio (de next o previous), lo limpiamos
+    const cleanUrl = url.replace(/^https?:\/\/[^/]+/, "");
+    const res = await axiosInstance.get(cleanUrl, { params });
+    return res.data;
+  },
+
+  // Obtener un evento por id
+  async retrieve(id) {
+    const res = await axiosInstance.get(`/events/${id}/`);
+    return res.data;
+  },
+
+  // Crear evento (usa multipart/form-data)
+  async create(formData) {
+    const res = await axiosInstance.post("/events/", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data;
+  },
+
+  // Obtener eventos creados por el usuario autenticado
+  async getMyEvents() {
+    const res = await axiosInstance.get("/events/my-events/");
+    return res.data.results; // 👈 devolvemos solo la lista de eventos
   },
 };

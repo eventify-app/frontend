@@ -63,7 +63,7 @@ const Header = () => {
                     className="focus:outline-none"
                   >
                     <img
-                      src="https://i.pravatar.cc/40"
+                      src="https://tero.coop/wp-content/uploads/2022/01/photo-avatar-profil-1-768x768.png"
                       alt="Avatar"
                       className="h-12 w-12 rounded-full border-2 border-primary"
                     />

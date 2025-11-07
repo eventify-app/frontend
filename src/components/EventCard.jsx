@@ -48,7 +48,7 @@ const EventCard = ({
           <div className="flex gap-2 items-center">
             <img
               className="w-6 rounded-full"
-              src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg"
+              src="https://tero.coop/wp-content/uploads/2022/01/photo-avatar-profil-1-768x768.png"
               alt="Creador"
             />
             <span className="text-sm">Organizador</span>
