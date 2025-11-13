@@ -109,13 +109,13 @@ const EventCard = ({
       {showOwnerActions ? (
         <div className="flex justify-center gap-4 mt-3">
           <button
-            className="bg-yellow-600 text-white px-5 py-2 rounded-lg font-medium hover:shadow-md hover:bg-yellow-600/80 transition-all"
+            className="bg-yellow-600 text-white px-5 py-2 rounded-lg font-medium hover:shadow-md hover:bg-yellow-600/80 transition-all cursor-pointer"
             onClick={onEdit}
           >
             Editar
           </button>
           <button
-            className="bg-red-600 text-white px-5 py-2 rounded-lg font-medium hover:shadow-md hover:bg-red-600/80 transition-all"
+            className="bg-red-600 text-white px-5 py-2 rounded-lg font-medium hover:shadow-md hover:bg-red-600/80 transition-all cursor-pointer"
             onClick={onDelete}
           >
             Eliminar
