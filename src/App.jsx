@@ -10,6 +10,8 @@ import Privacidad from "./pages/Privacidad";
 import CreateEvent from "./pages/CreateEvent";
 import MyEvents from "./pages/MyEvents"; // ✅ Importación agregada
 import EventForm from "./components/EventForm"; // ✅ Si tu formulario está en components
+import ExploreEvents from './pages/ExploreEvents'
+import EventDetail from "./pages/EventDetail";
 
 function App() {
   return (
@@ -31,7 +33,9 @@ function App() {
           {/* Eventos */}
           <Route path="/create-event" element={<CreateEvent />} />
           <Route path="/events/create" element={<EventForm />} />
+          <Route path="/events/:id" element={<EventDetail />} />
           <Route path="/events/edit/:id" element={<EventForm isEditMode />} />
+          <Route path="/explorer" element={<ExploreEvents />} />
 
           {/* Mis eventos (solo visible al usuario logueado) */}
           <Route path="/my-events" element={<MyEvents />} />

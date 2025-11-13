@@ -2,68 +2,118 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Main from "../layouts/Main";
 import EventCard from "../components/EventCard";
+import { eventService } from "../api/services/eventService";
 
 const MyEvents = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [eventToDelete, setEventToDelete] = useState(null); // 🔹 Evento seleccionado para eliminar
+  const [showModal, setShowModal] = useState(false); // 🔹 Control del modal
 
+  // 🔹 Cargar eventos del usuario
   useEffect(() => {
-    // Simulación de carga de eventos
-    setEvents([
-      {
-        id: 1,
-        title: "Concierto de Rock",
-        description: "Una noche inolvidable con las mejores bandas.",
-        place: "Auditorio Central",
-        start_date: "2025-11-15",
-        start_time: "19:00",
-        end_date: "2025-11-15",
-        end_time: "22:00",
-        image: "https://images.unsplash.com/photo-1518972559570-7cc1309f3229",
-      },
-      {
-        id: 2,
-        title: "Festival de Comida",
-        description: "Degusta lo mejor de la gastronomía local.",
-        place: "Plaza de Eventos",
-        start_date: "2025-12-01",
-        start_time: "11:00",
-        end_date: "2025-12-01",
-        end_time: "18:00",
-        image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836",
-      },
-    ]);
+    const fetchMyEvents = async () => {
+      try {
+        const data = await eventService.getMyEvents(); // Ya devuelve results
+        const formatted = data.map((event) => ({
+          id: event.id,
+          title: event.title,
+          description: event.description,
+          place: event.place,
+          start_date: event.start_date,
+          start_time: event.start_time,
+          end_date: event.end_date,
+          end_time: event.end_time,
+          image: event.cover_image, // asegúrate que sea la URL completa
+        }));
+        setEvents(formatted);
+      } catch (err) {
+        console.error(err);
+        setError("No se pudieron cargar tus eventos.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMyEvents();
   }, []);
 
+  // 🔹 Ir a editar evento
   const handleEdit = (event) => {
     navigate("/create-event", { state: { eventToEdit: event } });
   };
 
-  const handleDelete = (id) => {
-    setEvents(events.filter((e) => e.id !== id));
+  // 🔹 Mostrar modal de confirmación
+  const confirmDelete = (id) => {
+    setEventToDelete(id);
+    setShowModal(true);
   };
 
+  // 🔹 Eliminar evento confirmado
+  const handleDeleteConfirmed = async () => {
+    if (eventToDelete !== null) {
+      try {
+        await eventService.deleteEvent(eventToDelete);
+        setEvents((prev) => prev.filter((e) => e.id !== eventToDelete));
+      } catch (err) {
+        console.error(err);
+        alert("Error al eliminar el evento.");
+      } finally {
+        setEventToDelete(null);
+        setShowModal(false);
+      }
+    }
+  };
+
+  // 🔹 Cancelar eliminación
+  const handleCancelDelete = () => {
+    setEventToDelete(null);
+    setShowModal(false);
+  };
+
+  // 🔹 Crear evento
   const handleCreate = () => {
     navigate("/create-event");
   };
 
+  // 🔹 Mostrar mientras carga
+  if (loading) {
+    return (
+      <Main>
+        <div className="text-center py-10">Cargando tus eventos...</div>
+      </Main>
+    );
+  }
+
+  // 🔹 Mostrar si hay error
+  if (error) {
+    return (
+      <Main>
+        <div className="text-center text-red-600 py-10">{error}</div>
+      </Main>
+    );
+  }
+
+  // 🔹 Render principal
   return (
     <Main>
       <div className="w-full max-w-6xl mx-auto px-3 mb-6">
-        {/* Contenedor del título y botón */}
         <h1 className="text-2xl font-bold mb-4 text-center">Mis Eventos</h1>
-        <div className="mb-6">
+        <div className="mb-6 text-center">
           <button
             onClick={handleCreate}
-            className="px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition"
+            className="px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition cursor-pointer"
           >
             Crear Evento
           </button>
         </div>
 
-        {/* Grid de eventos */}
         {events.length === 0 ? (
-          <p className="text-gray-500 text-center">No tienes eventos registrados.</p>
+          <p className="text-gray-500 text-center">
+            No tienes eventos registrados.
+          </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {events.map((event) => (
@@ -74,14 +124,42 @@ const MyEvents = () => {
                 date={event.start_date}
                 location={event.place}
                 image={event.image}
-                showOwnerActions={true} // 🔹 Esto habilita Editar y Eliminar
+                showOwnerActions={true}
                 onEdit={() => handleEdit(event)}
-                onDelete={() => handleDelete(event.id)}
+                onDelete={() => confirmDelete(event.id)} // 🔹 Abrir modal
               />
             ))}
           </div>
         )}
       </div>
+
+      {/* 🔹 Modal de confirmación */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-80 p-6 text-center">
+            <h2 className="text-lg font-semibold mb-4">
+              ¿Deseas eliminar este evento?
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Esta acción no se puede deshacer.
+            </p>
+            <div className="flex justify-around">
+              <button
+                onClick={handleDeleteConfirmed}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition cursor-pointer"
+              >
+                Sí, eliminar
+              </button>
+              <button
+                onClick={handleCancelDelete}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Main>
   );
 };
