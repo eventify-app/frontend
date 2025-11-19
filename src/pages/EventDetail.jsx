@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { eventService } from "../api/services/eventService";
+import ParticipantsSection from "../pages/ParticipantsSection";
 import Main from "../layouts/Main";
 
 const EventDetail = () => {
   const { id } = useParams();
+  const numericId = parseInt(id);
+
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -12,7 +15,7 @@ const EventDetail = () => {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const res = await eventService.getEventById(id);
+        const res = await eventService.getEventById(numericId);
         setEvent(res);
       } catch (err) {
         console.error(err);
@@ -22,7 +25,7 @@ const EventDetail = () => {
       }
     };
     fetchEvent();
-  }, [id]);
+  }, [numericId]);
 
   if (loading) {
     return (
@@ -107,18 +110,13 @@ const EventDetail = () => {
                     </dd>
                   </div>
                   <div className="py-4 grid grid-cols-3 gap-4">
-                    <dt className="text-sm font-medium text-gray-500">
-                      Lugar
-                    </dt>
+                    <dt className="text-sm font-medium text-gray-500">Lugar</dt>
                     <dd className="text-sm text-gray-900 col-span-2">{place}</dd>
                   </div>
                   <div className="py-4 grid grid-cols-3 gap-4">
-                    <dt className="text-sm font-medium text-gray-500">
-                      Organizador
-                    </dt>
+                    <dt className="text-sm font-medium text-gray-500">Organizador</dt>
                     <dd className="text-sm text-gray-900 col-span-2">
-                      {id_creator?.first_name} {id_creator?.last_name} (
-                      {id_creator?.username})
+                      {id_creator?.first_name} {id_creator?.last_name} ({id_creator?.username})
                     </dd>
                   </div>
                 </dl>
@@ -139,6 +137,11 @@ const EventDetail = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Sección de participantes */}
+        <div className="mt-12">
+          <ParticipantsSection eventId={numericId} />
         </div>
       </div>
     </Main>

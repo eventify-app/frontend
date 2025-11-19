@@ -15,11 +15,17 @@ export const eventService = {
   async getEvents(params = {}) {
     const res = await axiosInstance.get("/events/", { params });
     return res.data;
-    },
+  },
 
   // Obtener un evento por ID
   async getEventById(id) {
     const res = await axiosInstance.get(`/events/${id}/`);
+    return res.data;
+  },
+
+  // Obtener participantes de un evento por ID
+  async getParticipants(id) {
+    const res = await axiosInstance.get(`/events/${id}/participants/`);
     return res.data;
   },
 
