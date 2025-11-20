@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { eventService } from "../api/services/eventService";
 import ParticipantsSection from "../pages/ParticipantsSection";
+import EventFeedback from "../pages/EventFeedback";
 import Main from "../layouts/Main";
 
 const EventDetail = () => {
@@ -134,7 +135,7 @@ const EventDetail = () => {
                 <h3 className="text-lg font-bold text-gray-900 mb-4">
                   ¿Te interesa asistir?
                 </h3>
-                <button className="w-full flex items-center justify-center rounded-lg h-12 px-5 bg-primary text-white text-base font-bold shadow-lg hover:bg-primary/90 transition-all transform hover:scale-105">
+                <button className="cursor-pointer w-full flex items-center justify-center rounded-lg h-12 px-5 bg-primary text-white text-base font-bold shadow-lg hover:bg-primary/90 transition-all transform hover:scale-105" >
                   Asistir
                 </button>
               </div>
@@ -145,6 +146,11 @@ const EventDetail = () => {
         {/* Sección de participantes */}
         <div className="mt-12">
           <ParticipantsSection eventId={numericId} isOrganizer={isOrganizer} />
+        </div>
+
+        {/* Sección de comentarios y calificación */}
+        <div className="mt-12">
+          <EventFeedback eventId={numericId} userId={user?.id} />
         </div>
       </div>
     </Main>

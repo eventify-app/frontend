@@ -71,4 +71,17 @@ export const eventService = {
     const res = await axiosInstance.get("/events/my-events/");
     return res.data.results; // 👈 devolvemos solo la lista de eventos
   },
+
+  // Obtener comentarios de un evento
+  async getComments(eventId) {
+    const res = await axiosInstance.get(`/events/${eventId}/comments/`);
+    return res.data.results;
+  },
+
+  // Enviar comentario y calificación
+  async submitComment(eventId, payload) {
+    const res = await axiosInstance.post(`/events/${eventId}/comments/`, payload);
+    return res.data;
+  },
+
 };
