@@ -1,25 +1,20 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { eventService } from "../api/services/eventService";
 
-const ParticipantsSection = ({ eventId }) => {
+export default function ParticipantsSection({ eventId, isOrganizer }) {
   const [participants, setParticipants] = useState([]);
+  const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!eventId || isNaN(eventId)) {
-      setError("ID de evento inválido.");
-      setLoading(false);
-      return;
-    }
-
     const fetchParticipants = async () => {
       try {
         const data = await eventService.getParticipants(eventId);
-        setParticipants(Array.isArray(data) ? data : data.results || []);
+        setParticipants(data);
+        setError(false);
       } catch (err) {
-        console.error(err);
-        setError("No se pudieron cargar los participantes.");
+        console.error("Error al cargar participantes:", err);
+        setError("No se pudieron cargar los participantes");
       } finally {
         setLoading(false);
       }
@@ -27,6 +22,19 @@ const ParticipantsSection = ({ eventId }) => {
 
     fetchParticipants();
   }, [eventId]);
+
+  const marcarAsistencia = async (participantId) => {
+    try {
+      await eventService.markAttendance(eventId, participantId);
+      setParticipants((prev) =>
+        prev.map((p) =>
+          p.id === participantId ? { ...p, attended: true } : p
+        )
+      );
+    } catch (err) {
+      console.error("Error al marcar asistencia:", err);
+    }
+  };
 
   return (
     <section className="mt-12">
@@ -55,11 +63,24 @@ const ParticipantsSection = ({ eventId }) => {
               className="w-12 h-12 rounded-full object-cover border"
             />
             <span className="text-gray-800">{p.name}</span>
+
+            {isOrganizer && !p.attended && (
+              <button
+                onClick={() => marcarAsistencia(p.id)}
+                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Marcar asistencia
+              </button>
+            )}
+
+            {p.attended && (
+              <span className="text-green-600 font-semibold ml-2">
+                ✅ Asistió
+              </span>
+            )}
           </li>
         ))}
       </ul>
     </section>
   );
-};
-
-export default ParticipantsSection;
+}

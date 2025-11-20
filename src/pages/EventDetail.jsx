@@ -55,6 +55,9 @@ const EventDetail = () => {
     id_creator,
   } = event;
 
+  const user = JSON.parse(localStorage.getItem("user"));
+  const isOrganizer = user?.id === id_creator?.id;
+
   const formatDate = (dateStr) =>
     new Date(dateStr).toLocaleDateString("es-ES", {
       year: "numeric",
@@ -141,7 +144,7 @@ const EventDetail = () => {
 
         {/* Sección de participantes */}
         <div className="mt-12">
-          <ParticipantsSection eventId={numericId} />
+          <ParticipantsSection eventId={numericId} isOrganizer={isOrganizer} />
         </div>
       </div>
     </Main>

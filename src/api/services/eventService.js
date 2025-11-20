@@ -26,7 +26,7 @@ export const eventService = {
   // Obtener participantes de un evento por ID
   async getParticipants(id) {
     const res = await axiosInstance.get(`/events/${id}/participants/`);
-    return res.data;
+    return res.data.results;
   },
 
   // Actualizar evento (también admite FormData)
