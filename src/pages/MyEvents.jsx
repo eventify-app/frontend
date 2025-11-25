@@ -9,49 +9,56 @@ const MyEvents = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [eventToDelete, setEventToDelete] = useState(null); // 🔹 Evento seleccionado para eliminar
-  const [showModal, setShowModal] = useState(false); // 🔹 Control del modal
+  const [eventToDelete, setEventToDelete] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [nextPage, setNextPage] = useState(null);
+  const [prevPage, setPrevPage] = useState(null);
+  const [count, setCount] = useState(0);
 
-  // 🔹 Cargar eventos del usuario
+  // 🔹 Cargar eventos personales con paginación
+  const fetchMyEvents = async (url = "events/my-events/") => {
+    try {
+      const data = await eventService.list(url);
+      const formatted = data.results.map((event) => ({
+        id: event.id,
+        title: event.title,
+        description: event.description,
+        place: event.place,
+        start_date: event.start_date,
+        start_time: event.start_time,
+        end_date: event.end_date,
+        end_time: event.end_time,
+        image: event.cover_image,
+      }));
+      setEvents(formatted);
+      setNextPage(data.next);
+      setPrevPage(data.previous);
+      setCount(data.count);
+    } catch (err) {
+      console.error(err);
+      setError("No se pudieron cargar tus eventos.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchMyEvents = async () => {
-      try {
-        const data = await eventService.getMyEvents(); // Ya devuelve results
-        const formatted = data.map((event) => ({
-          id: event.id,
-          title: event.title,
-          description: event.description,
-          place: event.place,
-          start_date: event.start_date,
-          start_time: event.start_time,
-          end_date: event.end_date,
-          end_time: event.end_time,
-          image: event.cover_image, // asegúrate que sea la URL completa
-        }));
-        setEvents(formatted);
-      } catch (err) {
-        console.error(err);
-        setError("No se pudieron cargar tus eventos.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchMyEvents();
   }, []);
 
-  // 🔹 Ir a editar evento
+  const handlePageChange = (url) => {
+    if (url) fetchMyEvents(url);
+  };
+
   const handleEdit = (event) => {
     navigate("/create-event", { state: { eventToEdit: event } });
   };
 
-  // 🔹 Mostrar modal de confirmación
   const confirmDelete = (id) => {
     setEventToDelete(id);
     setShowModal(true);
   };
 
-  // 🔹 Eliminar evento confirmado
   const handleDeleteConfirmed = async () => {
     if (eventToDelete !== null) {
       try {
@@ -67,18 +74,15 @@ const MyEvents = () => {
     }
   };
 
-  // 🔹 Cancelar eliminación
   const handleCancelDelete = () => {
     setEventToDelete(null);
     setShowModal(false);
   };
 
-  // 🔹 Crear evento
   const handleCreate = () => {
     navigate("/create-event");
   };
 
-  // 🔹 Mostrar mientras carga
   if (loading) {
     return (
       <Main>
@@ -87,7 +91,6 @@ const MyEvents = () => {
     );
   }
 
-  // 🔹 Mostrar si hay error
   if (error) {
     return (
       <Main>
@@ -96,7 +99,6 @@ const MyEvents = () => {
     );
   }
 
-  // 🔹 Render principal
   return (
     <Main>
       <div className="w-full max-w-6xl mx-auto px-3 mb-6">
@@ -115,21 +117,54 @@ const MyEvents = () => {
             No tienes eventos registrados.
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event) => (
-              <EventCard
-                key={event.id}
-                title={event.title}
-                description={event.description}
-                date={event.start_date}
-                location={event.place}
-                image={event.image}
-                showOwnerActions={true}
-                onEdit={() => handleEdit(event)}
-                onDelete={() => confirmDelete(event.id)} // 🔹 Abrir modal
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {events.map((event) => (
+                <EventCard
+                  key={event.id}
+                  title={event.title}
+                  description={event.description}
+                  date={event.start_date}
+                  location={event.place}
+                  image={event.image}
+                  showOwnerActions={true}
+                  onEdit={() => handleEdit(event)}
+                  onDelete={() => confirmDelete(event.id)}
+                />
+              ))}
+            </div>
+
+            {/* 🔹 Paginación */}
+            <div className="flex justify-center items-center gap-4 mt-10">
+              <button
+                disabled={!prevPage}
+                onClick={() => handlePageChange(prevPage)}
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  prevPage
+                    ? "bg-primary text-white hover:bg-primary/90"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+              >
+                ← Anterior
+              </button>
+
+              <span className="text-sm text-gray-600">
+                Mostrando {events.length} de {count} eventos
+              </span>
+
+              <button
+                disabled={!nextPage}
+                onClick={() => handlePageChange(nextPage)}
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  nextPage
+                    ? "bg-primary text-white hover:bg-primary/90"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+              >
+                Siguiente →
+              </button>
+            </div>
+          </>
         )}
       </div>
 

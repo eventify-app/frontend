@@ -12,21 +12,35 @@ const EventDetail = () => {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [canGiveFeedback, setCanGiveFeedback] = useState(false);
+  const [attended, setAttended] = useState(false); // 🔹 nuevo estado
+
+  const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const res = await eventService.getEventById(numericId);
-        setEvent(res);
+        const eventData = await eventService.getEventById(numericId);
+        setEvent(eventData);
+
+        const participants = await eventService.getParticipants(numericId);
+
+        // ✅ participants ahora es un array
+        const hasAttended = participants.some(
+          (p) => p.id === user?.id && p.attended
+        );
+        setAttended(hasAttended);
+        setCanGiveFeedback(hasAttended); // 🔹 habilitar feedback solo si asistió
       } catch (err) {
-        console.error(err);
-        setError("No se pudo cargar el evento.");
+        console.error("Error fetching event:", err);
+        setError("No se pudo cargar el evento");
       } finally {
         setLoading(false);
       }
     };
+
     fetchEvent();
-  }, [numericId]);
+  }, [numericId, user?.id]);
 
   if (loading) {
     return (
@@ -56,7 +70,6 @@ const EventDetail = () => {
     id_creator,
   } = event;
 
-  const user = JSON.parse(localStorage.getItem("user"));
   const isOrganizer = user?.id === id_creator?.id;
 
   const formatDate = (dateStr) =>
@@ -118,9 +131,12 @@ const EventDetail = () => {
                     <dd className="text-sm text-gray-900 col-span-2">{place}</dd>
                   </div>
                   <div className="py-4 grid grid-cols-3 gap-4">
-                    <dt className="text-sm font-medium text-gray-500">Organizador</dt>
+                    <dt className="text-sm font-medium text-gray-500">
+                      Organizador
+                    </dt>
                     <dd className="text-sm text-gray-900 col-span-2">
-                      {id_creator?.first_name} {id_creator?.last_name} ({id_creator?.username})
+                      {id_creator?.first_name} {id_creator?.last_name} (
+                      {id_creator?.username})
                     </dd>
                   </div>
                 </dl>
@@ -135,7 +151,7 @@ const EventDetail = () => {
                 <h3 className="text-lg font-bold text-gray-900 mb-4">
                   ¿Te interesa asistir?
                 </h3>
-                <button className="cursor-pointer w-full flex items-center justify-center rounded-lg h-12 px-5 bg-primary text-white text-base font-bold shadow-lg hover:bg-primary/90 transition-all transform hover:scale-105" >
+                <button className="cursor-pointer w-full flex items-center justify-center rounded-lg h-12 px-5 bg-primary text-white text-base font-bold shadow-lg hover:bg-primary/90 transition-all transform hover:scale-105">
                   Asistir
                 </button>
               </div>
@@ -149,9 +165,11 @@ const EventDetail = () => {
         </div>
 
         {/* Sección de comentarios y calificación */}
-        <div className="mt-12">
-          <EventFeedback eventId={numericId} userId={user?.id} />
-        </div>
+        {canGiveFeedback && (
+          <div className="mt-12">
+            <EventFeedback eventId={numericId} userId={user?.id} />
+          </div>
+        )}
       </div>
     </Main>
   );

@@ -22,7 +22,7 @@ const ExploreEventsPage = () => {
     fetchEvents();
   }, []);
 
-  const fetchEvents = async (url = "/events/", params = {}) => {
+  const fetchEvents = async (url = "events/", params = {}) => {
     try {
       const data = await eventService.list(url, params);
       setEvents(data.results);
@@ -45,7 +45,7 @@ const ExploreEventsPage = () => {
     if (filters.date) query.start_date = filters.date;
     if (filters.category && filters.category !== "All")
       query.category = filters.category;
-    fetchEvents("/events/", query);
+    fetchEvents("events/", query);
   };
 
   const handlePageChange = (url) => {
