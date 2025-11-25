@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Main from "../layouts/Main";
 import EventCard from "../components/EventCard";
@@ -6,18 +6,27 @@ import { eventService } from "../api/services/eventService";
 
 const MyEvents = () => {
   const navigate = useNavigate();
+
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [eventToDelete, setEventToDelete] = useState(null); // 🔹 Evento seleccionado para eliminar
-  const [showModal, setShowModal] = useState(false); // 🔹 Control del modal
 
-  // 🔹 Cargar eventos del usuario
-  useEffect(() => {
-    const fetchMyEvents = async () => {
-      try {
-        const data = await eventService.getMyEvents(); // Ya devuelve results
-        const formatted = data.map((event) => ({
+  // 🔹 Paginación
+  const [nextPage, setNextPage] = useState(null);
+  const [prevPage, setPrevPage] = useState(null);
+  const [count, setCount] = useState(0);
+
+  // 🔹 Modal eliminación
+  const [eventToDelete, setEventToDelete] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+
+  // 🔹 Cargar eventos con paginación
+  const fetchMyEvents = async (url = "/events/my-events/") => {
+    try {
+      const data = await eventService.list(url);
+
+      setEvents(
+        data.results.map((event) => ({
           id: event.id,
           title: event.title,
           description: event.description,
@@ -26,32 +35,49 @@ const MyEvents = () => {
           start_time: event.start_time,
           end_date: event.end_date,
           end_time: event.end_time,
-          image: event.cover_image, // asegúrate que sea la URL completa
-        }));
-        setEvents(formatted);
-      } catch (err) {
-        console.error(err);
-        setError("No se pudieron cargar tus eventos.");
-      } finally {
-        setLoading(false);
-      }
-    };
+          image: event.cover_image,
+        }))
+      );
 
+      setNextPage(data.next);
+      setPrevPage(data.previous);
+      setCount(data.count);
+    } catch (err) {
+      console.error(err);
+      setError("No se pudieron cargar tus eventos.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchMyEvents();
   }, []);
 
-  // 🔹 Ir a editar evento
+  const handlePageChange = (url) => {
+    if (url) {
+      fetchMyEvents(url);
+      // Scroll al elemento referenciado
+      setTimeout(() => {
+        window.scrollTo({
+          top: 0, // 50px arriba del elemento
+          behavior: 'smooth'
+        });
+    }, 100);
+    }
+  };
+
+  // 🔹 Editar evento
   const handleEdit = (event) => {
     navigate("/create-event", { state: { eventToEdit: event } });
   };
 
-  // 🔹 Mostrar modal de confirmación
+  // 🔹 Eliminar evento
   const confirmDelete = (id) => {
     setEventToDelete(id);
     setShowModal(true);
   };
 
-  // 🔹 Eliminar evento confirmado
   const handleDeleteConfirmed = async () => {
     if (eventToDelete !== null) {
       try {
@@ -67,18 +93,16 @@ const MyEvents = () => {
     }
   };
 
-  // 🔹 Cancelar eliminación
   const handleCancelDelete = () => {
     setEventToDelete(null);
     setShowModal(false);
   };
 
-  // 🔹 Crear evento
   const handleCreate = () => {
     navigate("/create-event");
   };
 
-  // 🔹 Mostrar mientras carga
+  // 🔹 Loading
   if (loading) {
     return (
       <Main>
@@ -87,7 +111,7 @@ const MyEvents = () => {
     );
   }
 
-  // 🔹 Mostrar si hay error
+  // 🔹 Error
   if (error) {
     return (
       <Main>
@@ -96,44 +120,79 @@ const MyEvents = () => {
     );
   }
 
-  // 🔹 Render principal
   return (
     <Main>
-      <div className="w-full max-w-6xl mx-auto px-3 mb-6">
-        <h1 className="text-2xl font-bold mb-4 text-center">Mis Eventos</h1>
-        <div className="mb-6 text-center">
-          <button
-            onClick={handleCreate}
-            className="px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition cursor-pointer"
-          >
-            Crear Evento
-          </button>
+      <div className="w-full flex flex-col max-w-6xl h-full justify-center mx-auto px-3 mb-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold mb-4 text-center">Mis Eventos</h1>
+          <div className="mb-6 text-center">
+            <button
+              onClick={handleCreate}
+              className="px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition cursor-pointer"
+            >
+              Crear Evento
+            </button>
+          </div>
         </div>
 
         {events.length === 0 ? (
-          <p className="text-gray-500 text-center">
+          <p className="text-gray-500 flex-1 flex items-center justify-center h-full">
             No tienes eventos registrados.
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event) => (
-              <EventCard
-                key={event.id}
-                title={event.title}
-                description={event.description}
-                date={event.start_date}
-                location={event.place}
-                image={event.image}
-                showOwnerActions={true}
-                onEdit={() => handleEdit(event)}
-                onDelete={() => confirmDelete(event.id)} // 🔹 Abrir modal
-              />
-            ))}
+          <div className="flex-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {events.map((event) => (
+                <EventCard
+                  key={event.id}
+                  id={event.id}
+                  title={event.title}
+                  description={event.description}
+                  date={event.start_date}
+                  location={event.place}
+                  image={event.image}
+                  showOwnerActions={true}
+                  onEdit={() => handleEdit(event)}
+                  onDelete={() => confirmDelete(event.id)}
+                />
+              ))}
+            </div>
+
+            {/* PAGINACIÓN */}
+            <div className="flex justify-center items-center gap-4 mt-10">
+              <button
+                disabled={!prevPage}
+                onClick={() => handlePageChange(prevPage)}
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  prevPage
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+              >
+                ← Anterior
+              </button>
+
+              <span className="text-sm text-gray-600">
+                Mostrando {events.length} de {count} eventos
+              </span>
+
+              <button
+                disabled={!nextPage}
+                onClick={() => handlePageChange(nextPage)}
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  nextPage
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+              >
+                Siguiente →
+              </button>
+            </div>
           </div>
         )}
       </div>
 
-      {/* 🔹 Modal de confirmación */}
+      {/* MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg w-80 p-6 text-center">

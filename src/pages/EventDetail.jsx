@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link, useLocation, useNavigate, useNavigationType } from "react-router-dom";
 import { eventService } from "../api/services/eventService";
 import ParticipantsSection from "../pages/ParticipantsSection";
 import EventFeedback from "../pages/EventFeedback";
@@ -9,9 +9,38 @@ const EventDetail = () => {
   const { id } = useParams();
   const numericId = parseInt(id);
 
+  const location = useLocation();
+  const navigate = useNavigate();
+  const navigationType = useNavigationType();
+
+  const cameFromState = Boolean(location.state && location.state.from);
+  const referrer = (typeof document !== "undefined" && document.referrer) ? document.referrer : "";
+  // Consideramos "direct access" cuando la navegación fue 'POP' y no hay state.from ni referrer
+  const isDirectLoad = navigationType === "POP" && !cameFromState && !referrer;
+  const canGoBack = !isDirectLoad; // muestra botón salvo que sea acceso directo sin referrer/state
+
+  const handleGoBack = () => {
+    // Si hay location.state.from, volvemos exactamente a esa ruta
+    const from = location.state?.from;
+    if (from) {
+      if (typeof from === "string") {
+        navigate(from);
+      } else if (typeof from === "object" && from.pathname) {
+        navigate(from.pathname + (from.search || ""));
+      } else {
+        navigate(-2); // fallback seguro
+      }
+    } else {
+      // fallback: navegamos una entrada atrás en el history
+      navigate(-2);
+    }
+  };
+
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  console.log(event)
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -27,6 +56,28 @@ const EventDetail = () => {
     };
     fetchEvent();
   }, [numericId]);
+
+  const handleEnroll = async () => {
+    try {
+      const res = await eventService.enroll(numericId);
+
+      // Opcional: mostrar feedback
+      alert("Te has inscrito correctamente");
+
+      // Si quieres refrescar participantes:
+      setEvent(await eventService.getEventById(numericId));
+    } catch (err) {
+      console.error(err);
+
+      if (err.response?.status === 400) {
+        alert(err.response.data?.detail || "Ya estás inscrito en este evento");
+      } else {
+        alert("Error al inscribirte");
+      }
+    }
+  };
+
+
 
   if (loading) {
     return (
@@ -53,18 +104,21 @@ const EventDetail = () => {
     start_time,
     end_date,
     end_time,
+    id_creator: { username },
     id_creator,
+    max_capacity
   } = event;
 
   const user = JSON.parse(localStorage.getItem("user"));
   const isOrganizer = user?.id === id_creator?.id;
 
-  const formatDate = (dateStr) =>
-    new Date(dateStr).toLocaleDateString("es-ES", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+  const formatDate = (dateStr) => {
+  const d = new Date(dateStr);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+};
 
   const formatTime = (timeStr) =>
     new Date(`1970-01-01T${timeStr}`).toLocaleTimeString("es-ES", {
@@ -74,14 +128,32 @@ const EventDetail = () => {
 
   return (
     <Main>
-      <div className="max-w-5xl mx-auto">
-        {/* Imagen principal */}
+      <>
+      <div className="grid grid-cols-2 grid-cols-[7fr_2fr] w-full gap-6">
+      
         <div
-          className="w-full h-64 md:h-80 lg:h-96 rounded-xl bg-cover bg-center flex flex-col justify-end"
+          className="w-full h-80 rounded-xl bg-cover bg-center flex flex-col justify-between pt-6 flex-8"
           style={{
             backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.6), transparent 40%), url(${cover_image})`,
           }}
         >
+          {canGoBack && (
+            <Link
+
+              onClick={() => {
+                if (!document.startViewTransition) return handleGoBack();
+
+                document.startViewTransition(() => {
+                  handleGoBack();
+                });
+              }}
+              className="ml-6 flex items-center shadow-lg gap-2 text-black font-medium py-2 px-3 w-fit rounded-xl bg-gray-100 hover:underline"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left h-4 w-4 mr-2" aria-hidden="true"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+              Volver
+            </Link>
+          )}
+
           <div className="p-6 md:p-8">
             <h1 className="text-white text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
               {title}
@@ -89,70 +161,97 @@ const EventDetail = () => {
           </div>
         </div>
 
-        {/* Contenido */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-          {/* Columna izquierda */}
-          <div className="lg:col-span-2">
-            <p className="text-gray-700 leading-relaxed">{description}</p>
+      <aside className="sticky top-28 flex-2 h-fit flex flex-col gap-4 rounded-lg bg-white shadow-md p-6 border border-gray-100">
 
-            <div className="mt-8">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
-                Detalles del evento
-              </h3>
-              <div className="border-t border-gray-200">
-                <dl className="divide-y divide-gray-200">
-                  <div className="py-4 grid grid-cols-3 gap-4">
-                    <dt className="text-sm font-medium text-gray-500">Fecha</dt>
-                    <dd className="text-sm text-gray-900 col-span-2">
-                      {formatDate(start_date)}
-                    </dd>
-                  </div>
-                  <div className="py-4 grid grid-cols-3 gap-4">
-                    <dt className="text-sm font-medium text-gray-500">Hora</dt>
-                    <dd className="text-sm text-gray-900 col-span-2">
-                      {formatTime(start_time)} - {formatTime(end_time)}
-                    </dd>
-                  </div>
-                  <div className="py-4 grid grid-cols-3 gap-4">
-                    <dt className="text-sm font-medium text-gray-500">Lugar</dt>
-                    <dd className="text-sm text-gray-900 col-span-2">{place}</dd>
-                  </div>
-                  <div className="py-4 grid grid-cols-3 gap-4">
-                    <dt className="text-sm font-medium text-gray-500">Organizador</dt>
-                    <dd className="text-sm text-gray-900 col-span-2">
-                      {id_creator?.first_name} {id_creator?.last_name} ({id_creator?.username})
-                    </dd>
-                  </div>
-                </dl>
-              </div>
+          <div className="flex items-center justify-between">
+            <div className="flex gap-2 items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users h-5 w-5 text-primary" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><path d="M16 3.128a4 4 0 0 1 0 7.744"></path><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><circle cx="9" cy="7" r="4"></circle></svg>
+              <p className="font-medium">Asistentes</p>
+            </div>
+
+            <p className="font-bold text-2xl">250</p>
+            
+          </div>
+
+          { max_capacity && (
+            <div className="flex flex-col gap-1">
+            <p className="text-sm text-gray-500">
+              De {max_capacity} cupos disponibles
+            </p>
+
+            <div aria-valuemax={max_capacity} aria-valuemin="0" role="progressbar" data-state="indeterminate" data-max="100" data-slot="progress" class="bg-primary/20 relative w-full overflow-hidden rounded-full h-2"><div data-state="indeterminate" data-max="100" data-slot="progress-indicator" className="bg-primary h-full w-full flex-1 transition-all" style={{transform: `translateX(-${250 / max_capacity * 100}%)`}}></div></div>
+
+            <p className="text-sm text-gray-500">250 cupos restantes</p>
+          </div>
+          ) }
+          
+
+
+          <button onClick={handleEnroll} className="cursor-pointer w-full flex items-center justify-center rounded-lg h-12 px-5 bg-primary text-white text-base font-bold shadow-lg hover:bg-primary/90 transition-all transform hover:scale-105" >
+            Asistir
+          </button>
+        </aside>
+
+        <div className="flex flex-col gap-4">
+          <h2 className="text-3xl font-semibold">Detalles del evento</h2>
+
+          <div className="flex items-center gap-6 bg-gray-50 p-6 rounded-2xl border border-gray-200 shadow-lg">
+
+          <div className="flex flex-1 gap-3 items-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar h-5 w-5 text-indigo-600" aria-hidden="true"><path d="M8 2v4"></path><path d="M16 2v4"></path><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M3 10h18"></path></svg></div>
+
+            <div className="flex flex-col">
+              <h3 className="text-gray-500 text-sm">Fecha</h3>
+              <p className="text-md font-semibold">
+                {start_date === end_date
+                  ? formatDate(start_date)
+                  : `${formatDate(start_date)} a ${formatDate(end_date)}`}
+              </p>
+              <p className="text-md font-semibold">{formatTime(start_time)} - {formatTime(end_time)}</p>
             </div>
           </div>
 
-          {/* Columna derecha */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-24">
-              <div className="rounded-lg bg-white shadow-md p-6 border border-gray-100">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">
-                  ¿Te interesa asistir?
-                </h3>
-                <button className="cursor-pointer w-full flex items-center justify-center rounded-lg h-12 px-5 bg-primary text-white text-base font-bold shadow-lg hover:bg-primary/90 transition-all transform hover:scale-105" >
-                  Asistir
-                </button>
-              </div>
+          <div className="flex flex-1 gap-3 items-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin h-5 w-5 text-purple-600" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg></div>
+            <div>
+              <h3 className="text-gray-500 text-sm">Ubicación</h3>
+              <p className="text-md font-semibold">{place}</p>
             </div>
+          </div>
+
+          <div className="flex flex-1 gap-3 items-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-pink-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-user-round h-5 w-5 text-pink-600" aria-hidden="true"><path d="M18 20a6 6 0 0 0-12 0"></path><circle cx="12" cy="10" r="4"></circle><circle cx="12" cy="12" r="10"></circle></svg></div>
+            <div>
+              <h3 className="text-gray-500 text-sm">Organizador</h3>
+              <p className="text-md font-semibold">{id_creator?.first_name} {id_creator?.last_name}</p>
+            </div>
+          </div>
+          </div>
+
+        </div>
+
+        <div className="row-start-3 px-6 py-5 bg-gray-50 rounded-2xl border border-gray-200 shadow-lg gap-3 flex flex-col">
+          <h2 className="text-xl font-semibold">Descripción</h2>
+
+          <p className="text-gray-600 text-lg">{description}</p>
+          <div>
+
           </div>
         </div>
 
         {/* Sección de participantes */}
-        <div className="mt-12">
+        <div className="row-start-4">
           <ParticipantsSection eventId={numericId} isOrganizer={isOrganizer} />
         </div>
 
         {/* Sección de comentarios y calificación */}
-        <div className="mt-12">
+        <div className="row-start-5">
           <EventFeedback eventId={numericId} userId={user?.id} />
         </div>
+
       </div>
+      </>
+      
     </Main>
   );
 };

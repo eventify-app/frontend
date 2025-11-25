@@ -52,7 +52,7 @@ export default function EventFeedback({ eventId, userId }) {
   };
 
   return (
-    <section className="mt-12">
+    <section>
       <h2 className="text-xl font-bold text-gray-800 mb-4">Tu opinión</h2>
 
       <div className="mb-4">

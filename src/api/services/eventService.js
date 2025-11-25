@@ -46,9 +46,12 @@ export const eventService = {
   },
 
   async list(url = "/events/", params = {}) {
-    // si la URL tiene dominio (de next o previous), lo limpiamos
-    const cleanUrl = url.replace(/^https?:\/\/[^/]+/, "");
-    const res = await axiosInstance.get(cleanUrl, { params });
+    // Si es URL absoluta, limpiar dominio + prefijo /api
+    if (url.startsWith("http")) {
+      url = url.replace(/^https?:\/\/[^/]+\/api/, "");   // quita dominio + /api
+    }
+
+    const res = await axiosInstance.get(url, { params });
     return res.data;
   },
 
@@ -81,6 +84,11 @@ export const eventService = {
   // Enviar comentario y calificación
   async submitComment(eventId, payload) {
     const res = await axiosInstance.post(`/events/${eventId}/comments/`, payload);
+    return res.data;
+  },
+
+  async enroll(eventId) {
+    const res = await axiosInstance.post(`/events/${eventId}/enroll/`);
     return res.data;
   },
 

@@ -33,7 +33,7 @@ function App() {
           {/* Eventos */}
           <Route path="/create-event" element={<CreateEvent />} />
           <Route path="/events/create" element={<EventForm />} />
-          <Route path="/events/:id" element={<EventDetail />} />
+          <Route path="/event/:id" element={<EventDetail />} />
           <Route path="/events/edit/:id" element={<EventForm isEditMode />} />
           <Route path="/explorer" element={<ExploreEvents />} />
 

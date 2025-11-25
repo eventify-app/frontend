@@ -37,7 +37,7 @@ export default function ParticipantsSection({ eventId, isOrganizer }) {
   };
 
   return (
-    <section className="mt-12">
+    <section>
       <h2 className="text-2xl font-bold text-gray-800 mb-4">
         Participantes ({participants.length})
       </h2>

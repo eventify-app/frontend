@@ -16,6 +16,7 @@ const CreateEvent = () => {
     start_time: "",
     end_date: "",
     end_time: "",
+    max_capacity: "",
   });
 
   const [coverImage, setCoverImage] = useState(null);
@@ -35,6 +36,7 @@ const CreateEvent = () => {
         start_time: eventToEdit.start_time || "",
         end_date: eventToEdit.end_date || "",
         end_time: eventToEdit.end_time || "",
+        max_capacity: eventToEdit.max_capacity || "",
       });
       if (eventToEdit.image) setPreview(eventToEdit.image);
     }
@@ -141,6 +143,23 @@ const CreateEvent = () => {
               required
               placeholder="Ej: Auditorio central"
               className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-primary focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="max_capacity" className="block font-semibold mb-2">
+              Capacidad máxima
+            </label>
+            <input
+              id="max_capacity"
+              type="number"
+              min="1"
+              value={formData.max_capacity}
+              onChange={handleChange}
+              required
+              placeholder="Ej: 50"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 
+                        focus:ring-2 focus:ring-primary focus:outline-none"
             />
           </div>
 
