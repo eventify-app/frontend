@@ -12,8 +12,29 @@ import MyEvents from "./pages/MyEvents"; // ✅ Importación agregada
 import EventForm from "./components/EventForm"; // ✅ Si tu formulario está en components
 import ExploreEvents from './pages/ExploreEvents'
 import EventDetail from "./pages/EventDetail";
+import { useEffect } from "react";
+import VerifyEmail from "./pages/VerifyEmail";
 
 function App() {
+  useEffect(() => {
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  const root = document.documentElement;
+  
+  if (mediaQuery.matches) {
+    root.classList.add('dark');
+  } else {
+    root.classList.remove('dark');
+  }
+
+  mediaQuery.addEventListener('change', (e) => {
+    if (e.matches) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  });
+}, []);
+
   return (
     <>
       <BrowserRouter>
@@ -25,6 +46,7 @@ function App() {
           {/* Autenticación */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Registro />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
 
           {/* Información */}
           <Route path="/terminos" element={<Terminos />} />

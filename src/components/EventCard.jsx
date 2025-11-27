@@ -13,6 +13,9 @@ const EventCard = ({
   onDelete,
   showOwnerActions = false,
   hour,
+  participants,
+  is_enrolled,
+  max_capacity,
   creator
 }) => {
   const defaultImage =
@@ -30,7 +33,7 @@ const EventCard = ({
       : "Próximamente";
 
   return (
-    <article className="overflow-hidden flex flex-col flex-1 bg-white rounded-xl gap-4 pb-6 shadow-sm hover:shadow-lg transition-all hover:shadow-xl hover:-translate-y-1">
+    <article className="overflow-hidden flex flex-col flex-1 bg-card-background dark: rounded-xl gap-4 pb-6 shadow-sm hover:shadow-lg transition-all hover:shadow-xl hover:-translate-y-1">
 
       
       <header>
@@ -46,9 +49,9 @@ const EventCard = ({
         />
       </header>
 
-      <div className="px-6 flex-1 flex flex-col gap-4 text-gray-600">
+      <div className="px-6 flex-1 flex flex-col gap-4 text-muted">
 
-          <h1 className="font-bold text-lg text-gray-900" style={{viewTransitionName: `event-title-${id}`}}>{title || "Sin título"}</h1>
+          <h1 className="font-bold text-lg text-primary" style={{viewTransitionName: `event-title-${id}`}}>{title || "Sin título"}</h1>
 
           <div className="flex flex-col gap-1">
 
@@ -67,12 +70,12 @@ const EventCard = ({
             <div className="flex gap-1 items-center">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users h-4 w-4 text-primary" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><path d="M16 3.128a4 4 0 0 1 0 7.744"></path><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><circle cx="9" cy="7" r="4"></circle></svg>
 
-              <small className="text-sm">asistentes</small>
+              <small className="text-sm"> {participants} / {max_capacity} asistentes</small>
             </div>
           </div>
 
 
-          <p className="text-gray-500 line-clamp-3">
+          <p className="line-clamp-3">
             {description || "Sin descripción disponible."}
             
           </p>
@@ -81,7 +84,7 @@ const EventCard = ({
             <div>
               <hr className="border-gray-300" />
               <small className="text-sm">Organiza: </small>
-              <small className="text-black text-sm">{creator}</small>
+              <small className="text-primary text-sm">{creator}</small>
             </div>
           ) }
           
@@ -89,14 +92,14 @@ const EventCard = ({
                   {showOwnerActions ? (
           <div className="flex items-end flex-1 justify-center gap-4">
             <button
-              className="text-yellow-500 flex items-center border border-yellow-500 bg-yellow-50 px-5 py-2 rounded-lg font-medium hover:scale-110 transition-all cursor-pointer"
+              className="text-yellow-600 flex items-center border border-yellow-600 bg-yellow-50 px-5 py-2 rounded-lg font-medium hover:scale-110 transition-all cursor-pointer"
               onClick={onEdit}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pen h-4 w-4 mr-2" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg>
               Editar
             </button>
             <button
-              className="bg-red-50 flex items-center text-red-500 border border-red-500 px-5 py-2 rounded-lg font-medium hover:shadow-md hover:scale-110 transition-all cursor-pointer"
+              className="bg-red-50 flex items-center text-red-600 border border-red-600 px-5 py-2 rounded-lg font-medium hover:shadow-md hover:scale-110 transition-all cursor-pointer"
               onClick={onDelete}
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="h-5 w-5 mr-2">
@@ -110,7 +113,7 @@ const EventCard = ({
             <Link
               to={`/event/${id}`}
               state={{ from: location }}
-              className="bg-background text-center text-black px-5 py-2 rounded-lg text-sm border border-gray-300 font-medium hover:shadow-md hover:bg-indigo-600 hover:text-white cursor-pointer transition-all"
+              className="bg-background text-center text-primary px-5 py-2 rounded-lg text-sm border border-gray-300 font-medium hover:shadow-md hover:bg-indigo-600 hover:text-white cursor-pointer transition-all"
                 onClick={() => {
                   if (!document.startViewTransition) return onJoin();
 

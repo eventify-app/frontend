@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import Main from "../layouts/Main";
 import { eventService } from "../api/services/eventService";
 import EventCard from "../components/EventCard"; // <-- IMPORTA TU COMPONENTE
+import DatePicker from "../components/DatePicker";
+import { format, max } from "date-fns"
 
 const ExploreEventsPage = () => {
   const [events, setEvents] = useState([]);
@@ -53,6 +55,11 @@ const ExploreEventsPage = () => {
 
     fetchEvents("/events/", query);
   };
+
+  function parseLocalDateString(yyyy_mm_dd) {
+  const [y, m, d] = yyyy_mm_dd.split("-").map(Number);
+  return new Date(y, m - 1, d, 12, 0, 0); // mediodía, local
+}
 
   const categories = [
   {
@@ -119,7 +126,7 @@ const ExploreEventsPage = () => {
     <Main>
         <h1 ref={topRef} className="text-3xl font-bold self-start">Descrubre eventos</h1>
 
-        <aside className="w-full flex flex-col gap-3">
+        <aside className="w-full flex flex-col ga-3">
           <form onSubmit={handleFilter}>
             <div class="flex gap-3 relative items-center">
               <button>
@@ -127,11 +134,11 @@ const ExploreEventsPage = () => {
               </button>
               
               
-              <input type="text" name="title" placeholder="Buscar eventos por nombre..." className="w-full pl-12 pr-4 py-3 border-2 bg-white border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none transition-colors " value={filters.title} onChange={handleChange} />
+              <input type="text" name="title" placeholder="Buscar eventos por nombre..." className="w-full pl-12 pr-4 py-3 border-2 bg-background border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none transition-colors " value={filters.title} onChange={handleChange} />
 
                           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center justify-center space-x-2 px-6 py-3 border-2 border-indigo-500 text-indigo-500 bg-indigo-50 rounded-xl hover:scale-110 transition-colors cursor-pointer"
+            className="flex items-center justify-center space-x-2 px-6 py-3 border-2 border-primary text-primary bg-primary/10 rounded-xl hover:scale-110 transition-colors cursor-pointer"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
               viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -144,153 +151,110 @@ const ExploreEventsPage = () => {
           </button>
             </div>
 
-
-          </form>
-          
-
-
           <div
             className={`transition-all duration-300 overflow-hidden ${
               showFilters ? "max-h-[1000px] opacity-100 mt-4" : "max-h-0 opacity-0"
             }`}
           >
-            <div className="p-6 rounded-xl bg-white shadow-sm border border-gray-200">
-              <h3 className="text-lg font-semibold mb-4">Filtros</h3>
+            <div className="p-6 rounded-xl bg-card-background shadow-sm border border-gray-200 flex flex-col gap-4">
+              <h3 className="text-lg font-semibold">Filtros</h3>
 
               {/* Tus inputs aquí */}
-              <div className="space-y-4">
+              <div className="flex gap-4">
 
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-3">
 
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z" />
-              </svg>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z" />
+                    </svg>
 
-              <span className="text-sm">Categoría:</span>
-            </div>
+                    <span className="text-sm">Categoría:</span>
+                  
 
-            {/* Chips */}
-            {categories.map((cat) => {
-              const isActive = filters.category === cat.value;
+                  {/* Chips */}
+                  {categories.map((cat) => {
+                    const isActive = filters.category === cat.value;
 
-              return (
-                <span
-                  key={cat.value}
-                  onClick={() =>
-                    setFilters((prev) => ({ ...prev, category: cat.value }))
-                  }
-                  className={`
-                    inline-flex items-center justify-center rounded-md px-2 py-1 
-                    text-xs font-medium cursor-pointer transition-all border
+                    return (
+                      <span
+                        key={cat.value}
+                        onClick={() =>
+                          setFilters((prev) => ({ ...prev, category: cat.value }))
+                        }
+                        className={`
+                          inline-flex items-center justify-center rounded-md px-2 py-1 
+                          text-xs font-medium cursor-pointer transition-all border
 
-                    ${isActive 
-                      ? `${cat.color} scale-105 shadow-md` 
-                      : `bg-white text-gray-800 border-gray-300 hover:bg-gray-100`}
-                  `}
-                >
-                  {cat.label}
-                </span>
-              );
-            })}
-          </div>
+                          ${isActive 
+                            ? `${cat.color} scale-105 shadow-md` 
+                            : `bg-white text-gray-800 border-gray-300 hover:bg-gray-100`}
+                        `}
+                      >
+                      {cat.label}
+                      </span>
+                    );
+                  })}
+                  </div>
+                </div>
 
+                <div className="flex items-center gap-2 ">
+                  <span className="text-sm text-muted-foreground">Fecha:</span>
+                  <DatePicker
+                    date={filters.date ? parseLocalDateString(filters.date) : undefined}
+                    setDate={(d) => {
+                      if (!d) {
+                        setFilters((prev) => ({ ...prev, date: "" }));
+                        return;
+                      }
 
-                <button
-                  onClick={handleApplyFilters}
-                  className="w-full bg-primary text-white py-2 rounded-lg"
-                >
-                  Aplicar filtros
-                </button>
-              </div>
-            </div>
-          </div>
-        </aside>
+                      // 🔥 fijar hora al mediodía para evitar desfase de zona horaria
+                      const adjusted = new Date(d);
+                      adjusted.setHours(12, 0, 0, 0);
 
-        <aside className="w-full lg:w-1/4 space-y-6">
-          <div className="p-6 rounded-xl bg-white shadow-sm border border-primary/10">
-            <h3 className="text-lg font-semibold mb-4 text-gray-800">
-              Filtros
-            </h3>
+                      setFilters((prev) => ({
+                        ...prev,
+                        date: format(adjusted, "yyyy-MM-dd"),
+                      }));
+                    }}
+                  />
+                </div>
 
-            {/* filtros */}
-            <div className="space-y-4">
+                <div className="flex items-center gap-2 text-muted-foreground w-full">
+                  <span className="text-sm">Lugar:</span>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Buscar por nombre
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={filters.title}
-                  onChange={handleChange}
-                  placeholder="Nombre del evento"
-                  className="mt-1 block w-full pl-3 pr-4 py-2 border border-primary/20 rounded-md"
-                />
-              </div>
+                  <input
+                    type="text"
+                    name="place"
+                    value={filters.place}
+                    onChange={handleChange}
+                    placeholder="Campus, ciudad..."
+                    className="block w-full pl-3 pr-4 py-1.5 border border-primary/20 rounded-md"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Categoría
-                </label>
-                <select
-                  name="category"
-                  value={filters.category}
-                  onChange={handleChange}
-                  className="mt-1 block w-full pl-3 pr-10 py-2 border border-primary/20 rounded-md"
-                >
-                  <option>All</option>
-                  <option>Music</option>
-                  <option>Tech</option>
-                  <option>Art</option>
-                  <option>Sports</option>
-                  <option>Career</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Fecha
-                </label>
-                <input
-                  type="date"
-                  name="date"
-                  value={filters.date}
-                  onChange={handleChange}
-                  className="mt-1 block w-full pl-3 pr-4 py-2 border border-primary/20 rounded-md"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Lugar
-                </label>
-                <input
-                  type="text"
-                  name="place"
-                  value={filters.place}
-                  onChange={handleChange}
-                  placeholder="Campus, ciudad..."
-                  className="mt-1 block w-full pl-3 pr-4 py-2 border border-primary/20 rounded-md"
-                />
+                
               </div>
 
               <button
-                onClick={handleApplyFilters}
-                className="w-full bg-primary text-white font-semibold py-2 px-4 rounded-lg hover:bg-primary/90"
-              >
-                Aplicar filtros
-              </button>
+                  onClick={handleApplyFilters}
+                  className="w-full bg-primary hover:bg-primary/75 text-white py-2 rounded-lg cursor-pointer"
+                >
+                  Aplicar filtros
+                </button>
             </div>
+
+            
           </div>
+          
+          </form>
+
+
         </aside>
-      <div className="w-full flex flex-col lg:flex-row gap-10">
 
-        {/* ========== SIDEBAR ========== */}
-
-
+       
+      <div className="w-full flex flex-1 flex-col lg:flex-row gap-10">
         {/* ========== LISTA DE EVENTOS ========== */}
         <section className="flex-1">
           {events.length === 0 ? (
@@ -312,6 +276,9 @@ const ExploreEventsPage = () => {
                     location={event.place}
                     image={event.cover_image}
                     onJoin={() => navigate(`/event/${event.id}`)}
+                    participants={event.participants_count}
+                    is_enrolled={event.is_enrolled}
+                    max_capacity={event.max_capacity}
                     creator={event.id_creator.username}
                   />
                 ))}

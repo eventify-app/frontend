@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import Main from "../layouts/Main";
 import EventCard from "../components/EventCard";
 import { eventService } from "../api/services/eventService";
+import { ChartPieInteractive } from "../components/ChartPieInteractive";
+import { ChartBarStacked } from "../components/ChartBarStacked";
 
 const MyEvents = () => {
   const navigate = useNavigate();
@@ -122,19 +124,27 @@ const MyEvents = () => {
 
   return (
     <Main>
+      
+
       <div className="w-full flex flex-col max-w-6xl h-full justify-center mx-auto px-3 mb-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold mb-4 text-center">Mis Eventos</h1>
           <div className="mb-6 text-center">
             <button
               onClick={handleCreate}
-              className="px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition cursor-pointer"
+              className="px-4 py-2 bg-primary text-white font-semibold rounded hover:bg-primary/70 transition cursor-pointer"
             >
               Crear Evento
             </button>
           </div>
         </div>
 
+        <div className="flex w-full gap-4">
+          <ChartPieInteractive />
+
+          <ChartBarStacked />
+        </div>
+        
         {events.length === 0 ? (
           <p className="text-gray-500 flex-1 flex items-center justify-center h-full">
             No tienes eventos registrados.

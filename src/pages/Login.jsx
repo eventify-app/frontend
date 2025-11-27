@@ -37,12 +37,12 @@ const Login = () => {
 
   return (
     <Main>
-      <section className="p-5 md:p-8 bg-white shadow-lg rounded-4xl gap-8 w-full max-w-xl flex flex-col items-center">
+      <section className="p-5 md:p-8 bg-card-background shadow-lg rounded-4xl gap-8 w-full max-w-xl flex flex-col items-center">
         <div className="flex flex-col items-center">
-          <h1 className="text-4xl font-bold text-gray-900 text-center">
+          <h1 className="text-4xl font-bold text-center">
             Bienvenido a <span className="text-primary">Eventify</span>
           </h1>
-          <p className="text-sm text-gray-600">Inicia sesión para continuar</p>
+          <p className="text-sm text-muted">Inicia sesión para continuar</p>
         </div>
 
         {error && <p className="text-red-500 text-sm font-medium text-center">{error}</p>}
@@ -62,7 +62,7 @@ const Login = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <button className="w-full py-3 px-4 text-white bg-primary rounded-2xl hover:bg-primary/80 transition-colors font-bold text-lg">
+          <button className="w-full py-3 px-4 text-white bg-primary rounded-2xl hover:bg-primary/80 transition-colors font-bold text-lg cursor-pointer">
             Iniciar sesión
           </button>
         </form>

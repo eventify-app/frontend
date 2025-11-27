@@ -90,13 +90,13 @@ const CreateEvent = () => {
   return (
     <Main>
       <div className="max-w-3xl mx-auto w-full">
-        <h1 className="text-3xl font-bold mb-6 text-center text-gray-900">
+        <h1 className="text-3xl font-bold mb-6">
           {location.state?.eventToEdit ? "Editar evento" : "Crear nuevo evento"}
         </h1>
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white p-8 rounded-2xl shadow-md border border-gray-200 space-y-6"
+          className="bg-card-background p-8 rounded-2xl shadow-md border border-gray-200 space-y-6"
         >
           {/* Título */}
           <div>
@@ -110,7 +110,7 @@ const CreateEvent = () => {
               onChange={handleChange}
               required
               placeholder="Ej: Charla sobre IA"
-              className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-primary focus:outline-none"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-background focus:ring-2 focus:ring-primary focus:outline-none"
             />
           </div>
 
@@ -126,7 +126,7 @@ const CreateEvent = () => {
               rows="4"
               required
               placeholder="Describe el evento..."
-              className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-primary focus:outline-none"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-background focus:ring-2 focus:ring-primary focus:outline-none"
             />
           </div>
 
@@ -142,7 +142,7 @@ const CreateEvent = () => {
               onChange={handleChange}
               required
               placeholder="Ej: Auditorio central"
-              className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-primary focus:outline-none"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-background focus:ring-2 focus:ring-primary focus:outline-none"
             />
           </div>
 
@@ -158,13 +158,13 @@ const CreateEvent = () => {
               onChange={handleChange}
               required
               placeholder="Ej: 50"
-              className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 
+              className="w-full p-3 border border-gray-300 rounded-lg bg-background 
                         focus:ring-2 focus:ring-primary focus:outline-none"
             />
           </div>
 
           {/* Imagen */}
-          <div className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 hover:border-primary transition-colors cursor-pointer">
+          <div className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed border-gray-300 rounded-xl bg-background hover:border-primary transition-colors cursor-pointer">
             <label
               htmlFor="cover_image"
               className="cursor-pointer flex flex-col items-center justify-center"
@@ -177,7 +177,7 @@ const CreateEvent = () => {
                 />
               ) : (
                 <>
-                  <p className="mt-2 font-semibold text-gray-700">
+                  <p className="mt-2 font-semibold text-muted">
                     Subir imagen o banner
                   </p>
                   <p className="text-sm text-gray-500">
@@ -207,7 +207,7 @@ const CreateEvent = () => {
                 value={formData.start_date}
                 onChange={handleChange}
                 required
-                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-primary focus:outline-none"
+                className="w-full p-3 border border-gray-300 rounded-lg bg-background focus:ring-2 focus:ring-primary focus:outline-none"
               />
             </div>
             <div>
@@ -220,7 +220,7 @@ const CreateEvent = () => {
                 value={formData.start_time}
                 onChange={handleChange}
                 required
-                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-primary focus:outline-none"
+                className="w-full p-3 border border-gray-300 rounded-lg bg-background focus:ring-2 focus:ring-primary focus:outline-none"
               />
             </div>
             <div>
@@ -233,7 +233,7 @@ const CreateEvent = () => {
                 value={formData.end_date}
                 onChange={handleChange}
                 required
-                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-primary focus:outline-none"
+                className="w-full p-3 border border-gray-300 rounded-lg bg-background focus:ring-2 focus:ring-primary focus:outline-none"
               />
             </div>
             <div>
@@ -246,7 +246,7 @@ const CreateEvent = () => {
                 value={formData.end_time}
                 onChange={handleChange}
                 required
-                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-primary focus:outline-none"
+                className="w-full p-3 border border-gray-300 rounded-lg bg-background focus:ring-2 focus:ring-primary focus:outline-none"
               />
             </div>
           </div>
@@ -258,7 +258,7 @@ const CreateEvent = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary text-white font-bold py-4 px-6 rounded-lg text-lg hover:bg-primary/90 transition-colors shadow-md shadow-primary/20 disabled:opacity-60"
+            className="w-full bg-primary text-white cursor-pointer font-bold py-4 px-6 rounded-lg text-lg hover:bg-primary/90 transition-colors shadow-md shadow-primary/20 disabled:opacity-60"
           >
             {loading
               ? "Publicando..."
