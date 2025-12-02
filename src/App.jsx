@@ -11,9 +11,12 @@ import CreateEvent from "./pages/CreateEvent";
 import MyEvents from "./pages/MyEvents"; // ✅ Importación agregada
 import EventForm from "./components/EventForm"; // ✅ Si tu formulario está en components
 import ExploreEvents from './pages/ExploreEvents'
+import MyProfile from "./pages/MyProfile";
 import EventDetail from "./pages/EventDetail";
 import { useEffect } from "react";
 import VerifyEmail from "./pages/VerifyEmail";
+import CalendarioEventos from "./pages/Calendario";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
   useEffect(() => {
@@ -61,6 +64,13 @@ function App() {
 
           {/* Mis eventos (solo visible al usuario logueado) */}
           <Route path="/my-events" element={<MyEvents />} />
+
+          <Route path="/profile" element={<MyProfile />} />
+          <Route path="/events/:id" element={<EventDetail />} />
+          <Route path="/calendar" element={<CalendarioEventos />} />
+
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
         </Routes>
       </BrowserRouter>
     </>

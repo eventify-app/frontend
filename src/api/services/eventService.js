@@ -1,12 +1,10 @@
-import axiosInstance from "../axiosInstance";
+import axiosInstance, { API_BASE_URL } from "../axiosInstance";
 
 export const eventService = {
   // Crear evento con multipart/form-data
   async createEvent(formData) {
     const res = await axiosInstance.post("/events/", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+      headers: { "Content-Type": "multipart/form-data" },
     });
     return res.data;
   },
@@ -23,18 +21,16 @@ export const eventService = {
     return res.data;
   },
 
-  // Obtener participantes de un evento por ID
-  async getParticipants(id) {
-    const res = await axiosInstance.get(`/events/${id}/participants/`);
+  // Obtener participantes de un evento
+  async getParticipants(eventId) {
+    const res = await axiosInstance.get(`/events/${eventId}/participants/`);
     return res.data.results;
   },
 
-  // Actualizar evento (también admite FormData)
+  // Actualizar evento
   async updateEvent(id, formData) {
     const res = await axiosInstance.put(`/events/${id}/`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+      headers: { "Content-Type": "multipart/form-data" },
     });
     return res.data;
   },
@@ -45,34 +41,31 @@ export const eventService = {
     return res.data;
   },
 
+  // Listar con URL absoluta o relativa
   async list(url = "/events/", params = {}) {
-    // Si es URL absoluta, limpiar dominio + prefijo /api
     if (url.startsWith("http")) {
-      url = url.replace(/^https?:\/\/[^/]+\/api/, "");   // quita dominio + /api
+      return (await axiosInstance.get(url, { params })).data;
     }
-
-    const res = await axiosInstance.get(url, { params });
-    return res.data;
+    const cleanUrl = url.replace(/^\/?api\//, "").replace(/^\/+/, "");
+    return (await axiosInstance.get(`${API_BASE_URL}/${cleanUrl}`, { params })).data;
   },
 
-  // Obtener un evento por id
-  async retrieve(id) {
-    const res = await axiosInstance.get(`/events/${id}/`);
-    return res.data;
-  },
-
-  // Crear evento (usa multipart/form-data)
-  async create(formData) {
-    const res = await axiosInstance.post("/events/", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    return res.data;
-  },
-
-  // Obtener eventos creados por el usuario autenticado
+  // Eventos en los que el usuario está inscrito
   async getMyEvents() {
     const res = await axiosInstance.get("/events/my-events/");
-    return res.data.results; // 👈 devolvemos solo la lista de eventos
+    return res.data; // { results, count, next, previous }
+  },
+
+  // Eventos creados por el usuario autenticado
+  async getMyProfileEvents() {
+    const res = await axiosInstance.get("/events/my-profile-events/");
+    return res.data; // { results, count, next, previous }
+  },
+
+  // Cancelar inscripción
+  async cancelSubscription(eventId) {
+    const res = await axiosInstance.delete(`/events/${eventId}/unenroll/`);
+    return res.data;
   },
 
   // Obtener comentarios de un evento
@@ -81,15 +74,27 @@ export const eventService = {
     return res.data.results;
   },
 
-  // Enviar comentario y calificación
+  // Enviar comentario
   async submitComment(eventId, payload) {
     const res = await axiosInstance.post(`/events/${eventId}/comments/`, payload);
     return res.data;
   },
 
+  // Inscribirse en un evento
   async enroll(eventId) {
     const res = await axiosInstance.post(`/events/${eventId}/enroll/`);
     return res.data;
   },
 
+  // Crear rating
+  async createEventRating(eventId, payload) {
+    const res = await axiosInstance.post(`/events/${eventId}/ratings/`, payload);
+    return res.data;
+  },
+
+  // Obtener ratings de un evento
+  async getEventRatings(eventId) {
+    const res = await axiosInstance.get(`/events/${eventId}/ratings/`);
+    return res.data;
+  },
 };

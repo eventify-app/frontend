@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Main from "../layouts/Main";
 import EventCard from "../components/EventCard";
@@ -23,12 +23,12 @@ const MyEvents = () => {
   const [showModal, setShowModal] = useState(false);
 
   // 🔹 Cargar eventos con paginación
-  const fetchMyEvents = async (url = "/events/my-events/") => {
+  const fetchMyEvents = async (url = null) => {
     try {
-      const data = await eventService.list(url);
+      const data = url ? await eventService.list(url) : await eventService.getMyEvents();
 
       setEvents(
-        data.results.map((event) => ({
+        (data.results || []).map((event) => ({
           id: event.id,
           title: event.title,
           description: event.description,
@@ -59,22 +59,16 @@ const MyEvents = () => {
   const handlePageChange = (url) => {
     if (url) {
       fetchMyEvents(url);
-      // Scroll al elemento referenciado
       setTimeout(() => {
-        window.scrollTo({
-          top: 0, // 50px arriba del elemento
-          behavior: 'smooth'
-        });
-    }, 100);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }, 100);
     }
   };
 
-  // 🔹 Editar evento
   const handleEdit = (event) => {
     navigate("/create-event", { state: { eventToEdit: event } });
   };
 
-  // 🔹 Eliminar evento
   const confirmDelete = (id) => {
     setEventToDelete(id);
     setShowModal(true);
@@ -104,7 +98,6 @@ const MyEvents = () => {
     navigate("/create-event");
   };
 
-  // 🔹 Loading
   if (loading) {
     return (
       <Main>
@@ -113,7 +106,6 @@ const MyEvents = () => {
     );
   }
 
-  // 🔹 Error
   if (error) {
     return (
       <Main>
@@ -124,8 +116,6 @@ const MyEvents = () => {
 
   return (
     <Main>
-      
-
       <div className="w-full flex flex-col max-w-6xl h-full justify-center mx-auto px-3 mb-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold mb-4 text-center">Mis Eventos</h1>
@@ -141,10 +131,9 @@ const MyEvents = () => {
 
         <div className="flex w-full gap-4">
           <ChartPieInteractive />
-
           <ChartBarStacked />
         </div>
-        
+
         {events.length === 0 ? (
           <p className="text-gray-500 flex-1 flex items-center justify-center h-full">
             No tienes eventos registrados.
