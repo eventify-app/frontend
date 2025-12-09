@@ -1,6 +1,6 @@
 import { useState } from "react"
-import { authService } from "../api/services/authService"
 import { useNavigate } from "react-router-dom"
+import { authService } from "../api/services/authService"
 import { useAuth } from "../context/AuthContext"
 import Main from "../layouts/Main"
 
@@ -9,7 +9,8 @@ const Login = () => {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const navigate = useNavigate()
-  const { setToken } = useAuth() // << importa el contexto
+
+  const { setToken, setUser } = useAuth()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -17,17 +18,15 @@ const Login = () => {
 
     try {
       const data = await authService.login({ username, password })
-      
-      // 👇 Ajusta según tu backend
-      const token = data.token || data.access
 
-      if (!token) throw new Error("Token no recibido")
+      if (!data.access) {
+        throw new Error("Token no recibido")
+      }
 
-      // Guardar en localStorage y en contexto
-      localStorage.setItem("token", token)
-      setToken(token)
+      // 🔥 Actualizar contexto
+      setToken(data.access)
+      setUser(data.user)
 
-      // Redirigir
       navigate("/explorer")
     } catch (err) {
       console.error("Error de login:", err)
@@ -45,7 +44,9 @@ const Login = () => {
           <p className="text-sm text-muted">Inicia sesión para continuar</p>
         </div>
 
-        {error && <p className="text-red-500 text-sm font-medium text-center">{error}</p>}
+        {error && (
+          <p className="text-red-500 text-sm font-medium text-center">{error}</p>
+        )}
 
         <form className="w-full flex flex-col gap-6" onSubmit={handleSubmit}>
           <input

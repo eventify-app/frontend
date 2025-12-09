@@ -11,6 +11,21 @@ export const eventService = {
     return res.data;
   },
 
+  async markAttendance(eventId, participantId) {
+    const formData = new FormData();
+    formData.append("participant_id", participantId);
+
+    const res = await axiosInstance.post(
+      `/events/${eventId}/check-in/`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+
+    return res.data;
+  },
+  
   // Obtener lista de eventos
   async getEvents(params = {}) {
     const res = await axiosInstance.get("/events/", { params });
@@ -90,6 +105,34 @@ export const eventService = {
   async enroll(eventId) {
     const res = await axiosInstance.post(`/events/${eventId}/enroll/`);
     return res.data;
+  },
+
+  // Estadísticas del creador (eventos creados)
+  async getMyStats() {
+    const res = await axiosInstance.get("/events/my-stats/");
+    return res.data;
+},
+
+  // Estadísticas como asistente (cantidad de eventos donde estoy inscrito)
+  async getMyAttendeeStats() {
+    const res = await axiosInstance.get("/events/my-attendee-stats/");
+    return res.data;
+  },
+
+  async getAttendeesByCategory() {
+    const res = await axiosInstance.get("/events/attendees-by-category/");
+    return res.data;
+  },
+
+  async getMyPopularEvents() {
+    const res = await axiosInstance.get("/events/my-popular-events/");
+    return res.data; // el backend ya devuelve lista directa
+  },
+
+
+  async getCategories() {
+    const res = await axiosInstance.get("/categories/");
+    return res.data.results; // devolvemos solo la lista de categorías
   },
 
 };

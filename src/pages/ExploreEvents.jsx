@@ -110,15 +110,7 @@ const ExploreEventsPage = () => {
     if (url) {
       fetchEvents(url);
       // Scroll al elemento referenciado
-      setTimeout(() => {
-      if (topRef.current) {
-        const elementPosition = topRef.current.offsetTop;
-        window.scrollTo({
-          top: elementPosition - 20, // 50px arriba del elemento
-          behavior: 'smooth'
-        });
-      }
-    }, 100);
+
     }
   };
 

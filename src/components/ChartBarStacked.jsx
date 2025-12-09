@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { TrendingUp } from "lucide-react"
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+import { TrendingUp } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 
 import {
   Card,
@@ -10,80 +10,93 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
+
 import {
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
 
-export const description = "A stacked bar chart with a legend"
+export function ChartBarStacked({ data }) {
+  if (!Array.isArray(data)) {
+    console.warn("ChartBarStacked: data inválido →", data);
+    return null;
+  }
 
-const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
-]
+  const chartData = data.map((ev) => ({
+    title:
+      ev?.event?.title
+        ? ev.event.title.length > 10
+          ? ev.event.title.slice(0, 10) + "…"
+          : ev.event.title
+        : "Sin título",
 
-const chartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "var(--chart-1)",
-  },
-  mobile: {
-    label: "Mobile",
-    color: "var(--chart-2)",
-  },
-}
+    registrados: Number(ev?.total_participants) || 0,
+    asistentes: Number(ev?.total_attended) || 0,
+  }));
 
-export function ChartBarStacked() {
+  if (chartData.length === 0) {
+    return (
+      <Card className="flex items-center justify-center p-10 w-full">
+        <p className="text-muted-foreground text-center">
+          No hay eventos populares.
+        </p>
+      </Card>
+    );
+  }
+
+  const chartConfig = {
+    registrados: {
+      label: "Registrados",
+      color: "var(--chart-1)",
+    },
+    asistentes: {
+      label: "Asistentes",
+      color: "var(--chart-2)",
+    },
+  };
+
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle>Bar Chart - Stacked + Legend</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
+        <CardTitle>Eventos Populares</CardTitle>
+        <CardDescription>Registrados vs Asistentes</CardDescription>
       </CardHeader>
+
       <CardContent>
         <ChartContainer config={chartConfig}>
           <BarChart data={chartData}>
             <CartesianGrid vertical={false} />
             <XAxis
-              dataKey="month"
+              dataKey="title"
               tickLine={false}
               tickMargin={10}
               axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
             />
             <ChartTooltip content={<ChartTooltipContent hideLabel />} />
             <ChartLegend content={<ChartLegendContent />} />
+
+            {/* Registrados */}
             <Bar
-              dataKey="desktop"
+              dataKey="registrados"
               stackId="a"
-              fill="var(--color-desktop)"
+              fill="var(--chart-1)"
               radius={[0, 0, 4, 4]}
             />
+
+            {/* Asistentes */}
             <Bar
-              dataKey="mobile"
+              dataKey="asistentes"
               stackId="a"
-              fill="var(--color-mobile)"
+              fill="var(--chart-2)"
               radius={[4, 4, 0, 0]}
             />
           </BarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 leading-none font-medium">
-          Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="text-muted-foreground leading-none">
-          Showing total visitors for the last 6 months
-        </div>
-      </CardFooter>
     </Card>
-  )
+  );
 }

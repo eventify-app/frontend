@@ -14,6 +14,7 @@ import ExploreEvents from './pages/ExploreEvents'
 import EventDetail from "./pages/EventDetail";
 import { useEffect } from "react";
 import VerifyEmail from "./pages/VerifyEmail";
+import CalendarioEventos from "./pages/Calendario";
 
 function App() {
   useEffect(() => {
@@ -37,7 +38,7 @@ function App() {
 
   return (
     <>
-      <BrowserRouter>
+      <BrowserRouter viewTransition>
         <Header />
         <Routes>
           {/* Página principal */}
@@ -58,6 +59,7 @@ function App() {
           <Route path="/event/:id" element={<EventDetail />} />
           <Route path="/events/edit/:id" element={<EventForm isEditMode />} />
           <Route path="/explorer" element={<ExploreEvents />} />
+          <Route path="/calendar" element={<CalendarioEventos />} />
 
           {/* Mis eventos (solo visible al usuario logueado) */}
           <Route path="/my-events" element={<MyEvents />} />

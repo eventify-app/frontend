@@ -23,14 +23,13 @@ const EventCard = ({
       ? image
       : "https://via.placeholder.com/400x250?text=Evento+sin+imagen";
 
-  const formattedDate =
-    date && !isNaN(new Date(date).getTime())
-      ? new Date(date).toLocaleDateString("es-CO", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        })
-      : "Próximamente";
+    const formattedDate = date
+    ? new Date(date + "T00:00:00").toLocaleDateString("es-CO", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "Próximamente";
 
   return (
     <article className="overflow-hidden flex flex-col flex-1 bg-card-background dark: rounded-xl gap-4 pb-6 shadow-sm hover:shadow-lg transition-all hover:shadow-xl hover:-translate-y-1">

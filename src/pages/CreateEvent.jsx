@@ -2,12 +2,31 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { eventService } from "../api/services/eventService";
 import Main from "../layouts/Main";
+import { CalendarInput } from "../components/CalendarInput";
+
+const categoryColorsById = {
+  1: "bg-green-100 text-green-800 border-green-300",
+  2: "bg-purple-100 text-purple-800 border-purple-300",
+  3: "bg-blue-100 text-blue-800 border-blue-300",
+  4: "bg-pink-100 text-pink-800 border-pink-300",
+  5: "bg-indigo-100 text-indigo-800 border-indigo-300",
+  6: "bg-yellow-100 text-yellow-800 border-yellow-300",
+};
+
+const normalizeDate = (dateString) => {
+  if (!dateString) return "";
+  return dateString.split("T")[0];
+};
+
+const normalizeTime = (dateString) => {
+  if (!dateString) return "";
+  return dateString.split("T")[1]?.slice(0, 5) || "";
+};
 
 const CreateEvent = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // Para recibir datos al editar
+  const location = useLocation();
 
-  // Solo campos editables
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -19,36 +38,47 @@ const CreateEvent = () => {
     max_capacity: "",
   });
 
+  const [categories, setCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
   const [coverImage, setCoverImage] = useState(null);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // 🔹 Precargar datos si es edición
+  // ======= PRE-CARGA DE EDICIÓN =======
   useEffect(() => {
     const eventToEdit = location.state?.eventToEdit;
+
     if (eventToEdit) {
       setFormData({
         title: eventToEdit.title || "",
         description: eventToEdit.description || "",
         place: eventToEdit.place || "",
-        start_date: eventToEdit.start_date || "",
-        start_time: eventToEdit.start_time || "",
-        end_date: eventToEdit.end_date || "",
-        end_time: eventToEdit.end_time || "",
+        start_date: normalizeDate(eventToEdit.start_date),
+        start_time: eventToEdit.start_time ?? normalizeTime(eventToEdit.start_date),
+        end_date: normalizeDate(eventToEdit.end_date),
+        end_time: normalizeTime(eventToEdit.end_date),
         max_capacity: eventToEdit.max_capacity || "",
       });
+
       if (eventToEdit.image) setPreview(eventToEdit.image);
+
+      if (eventToEdit.categories) {
+        setSelectedCategories(eventToEdit.categories.map((c) => String(c.id)));
+      }
     }
   }, [location.state]);
 
-  // Manejo de campos normales
+  // ======= CARGAR CATEGORÍAS =======
+  useEffect(() => {
+    eventService.getCategories().then((data) => setCategories(data || []));
+  }, []);
+
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
-  // Manejo de la imagen
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -57,31 +87,49 @@ const CreateEvent = () => {
     }
   };
 
+  const toggleCategory = (id) => {
+    const idStr = String(id);
+    setSelectedCategories((prev) =>
+      prev.includes(idStr)
+        ? prev.filter((c) => c !== idStr)
+        : [...prev, idStr]
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (selectedCategories.length === 0) {
+      setError("Debes seleccionar al menos una categoría");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const data = new FormData();
-      // 🔹 Solo agregamos los campos editables
       Object.entries(formData).forEach(([key, value]) => {
-        data.append(key, value);
+        data.append(key, value ?? "");
       });
+
+      selectedCategories.forEach((id) => {
+        data.append("categories_ids", id);
+      });
+
       if (coverImage) data.append("cover_image", coverImage);
 
-      if (location.state?.eventToEdit) {
-        // 🔹 Edición: enviamos solo los campos editables, nunca el creador
-        await eventService.updateEvent(location.state.eventToEdit.id, data);
+      const editing = location.state?.eventToEdit;
+
+      if (editing) {
+        await eventService.updateEvent(editing.id, data);
       } else {
-        // 🔹 Creación: enviamos solo campos editables + imagen
         await eventService.createEvent(data);
       }
 
       navigate("/my-events");
     } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.detail || "Error al guardar el evento");
+      setError(err?.response?.data?.detail || "Error al guardar el evento");
     } finally {
       setLoading(false);
     }
@@ -109,8 +157,7 @@ const CreateEvent = () => {
               value={formData.title}
               onChange={handleChange}
               required
-              placeholder="Ej: Charla sobre IA"
-              className="w-full p-3 border border-gray-300 rounded-lg bg-background focus:ring-2 focus:ring-primary focus:outline-none"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-background"
             />
           </div>
 
@@ -125,8 +172,7 @@ const CreateEvent = () => {
               onChange={handleChange}
               rows="4"
               required
-              placeholder="Describe el evento..."
-              className="w-full p-3 border border-gray-300 rounded-lg bg-background focus:ring-2 focus:ring-primary focus:outline-none"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-background"
             />
           </div>
 
@@ -141,11 +187,11 @@ const CreateEvent = () => {
               value={formData.place}
               onChange={handleChange}
               required
-              placeholder="Ej: Auditorio central"
-              className="w-full p-3 border border-gray-300 rounded-lg bg-background focus:ring-2 focus:ring-primary focus:outline-none"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-background"
             />
           </div>
 
+          {/* Capacidad */}
           <div>
             <label htmlFor="max_capacity" className="block font-semibold mb-2">
               Capacidad máxima
@@ -157,35 +203,20 @@ const CreateEvent = () => {
               value={formData.max_capacity}
               onChange={handleChange}
               required
-              placeholder="Ej: 50"
-              className="w-full p-3 border border-gray-300 rounded-lg bg-background 
-                        focus:ring-2 focus:ring-primary focus:outline-none"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-background"
             />
           </div>
 
           {/* Imagen */}
-          <div className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed border-gray-300 rounded-xl bg-background hover:border-primary transition-colors cursor-pointer">
-            <label
-              htmlFor="cover_image"
-              className="cursor-pointer flex flex-col items-center justify-center"
-            >
+          <div className="flex flex-col items-center p-6 border-2 border-dashed border-gray-300 rounded-xl bg-background cursor-pointer">
+            <label htmlFor="cover_image" className="cursor-pointer">
               {preview ? (
-                <img
-                  src={preview}
-                  alt="Vista previa"
-                  className="rounded-xl max-h-64 object-cover"
-                />
+                <img src={preview} alt="Vista previa" className="rounded-xl max-h-64 object-cover" />
               ) : (
-                <>
-                  <p className="mt-2 font-semibold text-muted">
-                    Subir imagen o banner
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Arrastra o haz clic para subir
-                  </p>
-                </>
+                <p className="text-muted">Subir imagen</p>
               )}
             </label>
+
             <input
               id="cover_image"
               type="file"
@@ -195,73 +226,68 @@ const CreateEvent = () => {
             />
           </div>
 
-          {/* Fechas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="start_date" className="block font-semibold mb-2">
-                Fecha de inicio
-              </label>
-              <input
-                id="start_date"
-                type="date"
-                value={formData.start_date}
-                onChange={handleChange}
-                required
-                className="w-full p-3 border border-gray-300 rounded-lg bg-background focus:ring-2 focus:ring-primary focus:outline-none"
-              />
-            </div>
-            <div>
-              <label htmlFor="start_time" className="block font-semibold mb-2">
-                Hora de inicio
-              </label>
-              <input
-                id="start_time"
-                type="time"
-                value={formData.start_time}
-                onChange={handleChange}
-                required
-                className="w-full p-3 border border-gray-300 rounded-lg bg-background focus:ring-2 focus:ring-primary focus:outline-none"
-              />
-            </div>
-            <div>
-              <label htmlFor="end_date" className="block font-semibold mb-2">
-                Fecha de finalización
-              </label>
-              <input
-                id="end_date"
-                type="date"
-                value={formData.end_date}
-                onChange={handleChange}
-                required
-                className="w-full p-3 border border-gray-300 rounded-lg bg-background focus:ring-2 focus:ring-primary focus:outline-none"
-              />
-            </div>
-            <div>
-              <label htmlFor="end_time" className="block font-semibold mb-2">
-                Hora de finalización
-              </label>
-              <input
-                id="end_time"
-                type="time"
-                value={formData.end_time}
-                onChange={handleChange}
-                required
-                className="w-full p-3 border border-gray-300 rounded-lg bg-background focus:ring-2 focus:ring-primary focus:outline-none"
-              />
-            </div>
+          {/* Categorías */}
+          <div className="flex flex-wrap gap-2">
+            {categories.map((cat) => {
+              const isSelected = selectedCategories.includes(String(cat.id));
+              const colors = categoryColorsById[cat.id] || "";
+
+              return (
+                <span
+                  key={cat.id}
+                  onClick={() => toggleCategory(cat.id)}
+                  className={`
+                    inline-flex items-center rounded-md px-3 py-1 text-sm font-medium 
+                    cursor-pointer transition-all border
+                    ${
+                      isSelected
+                        ? `${colors} scale-105 shadow-md border-transparent`
+                        : "bg-white text-gray-800 border-gray-300 hover:bg-gray-100"
+                    }
+                  `}
+                >
+                  {cat.type}
+                </span>
+              );
+            })}
           </div>
 
-          {error && (
-            <p className="text-center text-red-600 font-medium">{error}</p>
-          )}
+          {/* Fechas */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CalendarInput
+              dateValue={formData.start_date}
+              timeValue={formData.start_time}
+              onChange={({ date, time }) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  start_date: date,
+                  start_time: time,
+                }))
+              }
+            />
+
+            <CalendarInput
+              dateValue={formData.end_date}
+              timeValue={formData.end_time}
+              onChange={({ date, time }) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  end_date: date,
+                  end_time: time,
+                }))
+              }
+            />
+          </div>
+
+          {error && <p className="text-center text-red-600 font-medium">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary text-white cursor-pointer font-bold py-4 px-6 rounded-lg text-lg hover:bg-primary/90 transition-colors shadow-md shadow-primary/20 disabled:opacity-60"
+            className="w-full bg-primary text-white font-bold py-4 px-6 rounded-lg text-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
           >
             {loading
-              ? "Publicando..."
+              ? "Guardando..."
               : location.state?.eventToEdit
               ? "Actualizar evento"
               : "Publicar evento"}

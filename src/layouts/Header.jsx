@@ -31,7 +31,7 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 my-3 w-full rounded-2xl max-w-[85rem] px-8 py-4 bg-card-background/70 border z-50">
+    <header className="fixed top-0 my-3 w-full rounded-2xl max-w-340 px-8 py-4 bg-card-background/75 backdrop-blur-xs border z-50">
       <div className="max-w-7xl flex justify-between m-auto items-center">
 
         <a className="flex items-center gap-2" href="/">
