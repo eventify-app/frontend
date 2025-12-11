@@ -1,3 +1,4 @@
+// src/api/services/authService.js
 import axiosInstance from "../axiosInstance";
 
 export const authService = {
@@ -8,18 +9,20 @@ export const authService = {
 
   async login(credentials) {
     const res = await axiosInstance.post("/users/login/", credentials);
-    // Suponiendo que el token está en res.data.token
-    const token = res.data.access;
 
-    if (token) {
-      localStorage.setItem("token", token);
-      
-    }
+    const { access, refresh, user } = res.data;
+
+    // 🔥 Guardar en localStorage
+    if (access) localStorage.setItem("token", access);
+    if (refresh) localStorage.setItem("refresh", refresh);
+    if (user) localStorage.setItem("user", JSON.stringify(user));
+
     return res.data;
   },
 
   logout() {
-    localStorage.removeItem("token")
-  }
-}
-
+    localStorage.removeItem("token");
+    localStorage.removeItem("refresh");
+    localStorage.removeItem("user");
+  },
+};
