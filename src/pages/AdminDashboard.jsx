@@ -363,7 +363,7 @@ export default function AdminDashboard() {
 
 
             {/* FILTERS */}
-            <section className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-4 rounded-lg shadow">
+            <section className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-card-background p-4 rounded-lg shadow">
                 <div className="flex flex-col">
                     <label className="text-sm font-medium">Fecha inicio</label>
                     <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
@@ -406,17 +406,17 @@ export default function AdminDashboard() {
 
             {/* KPI CARDS */}
             <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="bg-white p-5 rounded-lg shadow text-center md:text-left">
+                <div className="bg-card-background p-5 rounded-lg shadow text-center md:text-left">
                     <div className="text-sm text-gray-500">Eventos destacados</div>
                     <div className="text-3xl font-bold mt-2">{topEvents?.length ?? 0}</div>
                 </div>
 
-                <div className="bg-white p-5 rounded-lg shadow text-center md:text-left">
+                <div className="bg-card-background p-5 rounded-lg shadow text-center md:text-left">
                     <div className="text-sm text-gray-500">Categorías</div>
                     <div className="text-3xl font-bold mt-2">{topCategories?.length ?? 0}</div>
                 </div>
 
-                <div className="bg-white p-5 rounded-lg shadow text-center md:text-left">
+                <div className="bg-card-background p-5 rounded-lg shadow text-center md:text-left">
                     <div className="text-sm text-gray-500">Creadores</div>
                     <div className="text-3xl font-bold mt-2">{topCreators?.length ?? 0}</div>
                 </div>
@@ -424,7 +424,7 @@ export default function AdminDashboard() {
 
             {/* CHARTS */}
             <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                 <div className="bg-white p-5 rounded-lg shadow min-h-[260px]">
+                 <div className="bg-card-background p-5 rounded-lg shadow min-h-[260px]">
                     <h3 className="font-semibold mb-3">Top Categorías</h3>
                     <div className="w-full h-[220px]">
                         {analyticsLoading ? <p>Cargando...</p> :
@@ -442,7 +442,7 @@ export default function AdminDashboard() {
                     </div>
                     </div>
 
-                <div className="bg-white p-5 rounded-lg shadow min-h-[260px]">
+                <div className="bg-card-background p-5 rounded-lg shadow min-h-[260px]">
                     <h3 className="font-semibold mb-3">Top Eventos (por inscripciones)</h3>
                     <div className="w-full h-[220px]">
                         {analyticsLoading ? <p>Cargando...</p> :
@@ -466,7 +466,7 @@ export default function AdminDashboard() {
 
             {/* TOP TABLES */}
             <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white p-5 rounded-lg shadow">
+                <div className="bg-card-background p-5 rounded-lg shadow">
                     <h3 className="font-semibold mb-3">Top Eventos</h3>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
@@ -480,7 +480,7 @@ export default function AdminDashboard() {
                             {topEvents?.map((e, i) => (
                                 <tr
                                 key={i}
-                                className="border-t cursor-pointer hover:bg-gray-50 transition"
+                                className="border-t cursor-pointer hover:bg-primary transition"
                                 onClick={() => navigate(`/event/${e.id}`)}
                                 >
                                 <td className="py-2 pr-4">{e.title}</td>
@@ -492,7 +492,7 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                <div className="bg-white p-5 rounded-lg shadow">
+                <div className="bg-card-background p-5 rounded-lg shadow">
                     <h3 className="font-semibold mb-3">Top Categorías</h3>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
@@ -516,7 +516,7 @@ export default function AdminDashboard() {
             </section>
 
             {/* -------- REPORTED EVENTS -------- */}
-            <section className="bg-white p-5 rounded-lg shadow space-y-4">
+            <section className="bg-card-background p-5 rounded-lg shadow space-y-4">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <h3 className="text-lg font-semibold">Eventos reportados</h3>
 
@@ -527,14 +527,6 @@ export default function AdminDashboard() {
                             onChange={(e) => setEventsSearch(e.target.value)}
                             className="px-3 py-2 border rounded w-full md:w-auto"
                         />
-                        <select
-                            value={eventsOrdering}
-                            onChange={(e) => setEventsOrdering(e.target.value)}
-                            className="px-3 py-2 border rounded w-full md:w-auto"
-                        >
-                            <option value="-latest_report_date">Últimos reportes</option>
-                            <option value="report_count">Más reportes</option>
-                        </select>
                     </div>
                 </div>
 
@@ -542,7 +534,7 @@ export default function AdminDashboard() {
                     {eventsLoading ? <p>Cargando...</p> : (eventsTableRows.length === 0 ? <p className="text-sm text-gray-500">No hay eventos reportados.</p> :
                         eventsTableRows.map(row => (
                             <div key={row.id}
-                                className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-4 border rounded-lg bg-gray-50"
+                                className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-4 border rounded-lg bg-background"
                             >
                                 <div className="flex-1 space-y-1">
                                     <div className="font-semibold">{row.title}</div>
@@ -552,9 +544,24 @@ export default function AdminDashboard() {
 
                                 <div className="flex items-center gap-3">
                                     <span className="text-sm">Reportes: <strong>{row.report_count}</strong></span>
-                                    <button onClick={() => handleDisableEvent(row.raw)} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition">Deshabilitar</button>
-                                    <button onClick={() => handleRestoreEvent(row.raw)} className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition">Restaurar</button>
+
+                                    {row.raw.event?.is_active ? (
+                                        <button
+                                            onClick={() => handleDisableEvent(row.raw)}
+                                            className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                                        >
+                                            Deshabilitar
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => handleRestoreEvent(row.raw)}
+                                            className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition"
+                                        >
+                                            Restaurar
+                                        </button>
+                                    )}
                                 </div>
+
                             </div>
                         ))
                     )}
@@ -564,31 +571,27 @@ export default function AdminDashboard() {
                     <span className="text-sm text-gray-600">Mostrando {reportedEvents.length} de {eventsCount}</span>
 
                     <div className="flex gap-2">
-                        <button disabled={!eventsPrev} onClick={() => loadReportedEvents({ url: eventsPrev })} className={`px-3 py-1 rounded ${eventsPrev ? "bg-white border hover:bg-gray-50" : "bg-gray-100 text-gray-400"}`}>Anterior</button>
-                        <button disabled={!eventsNext} onClick={() => loadReportedEvents({ url: eventsNext })} className={`px-3 py-1 rounded ${eventsNext ? "bg-white border hover:bg-gray-50" : "bg-gray-100 text-gray-400"}`}>Siguiente</button>
+                        <button disabled={!eventsPrev} onClick={() => loadReportedEvents({ url: eventsPrev })} className={`px-3 py-1 rounded ${eventsPrev ? "bg-card-background border hover:bg-gray-50" : "bg-gray-100 text-gray-400"}`}>Anterior</button>
+                        <button disabled={!eventsNext} onClick={() => loadReportedEvents({ url: eventsNext })} className={`px-3 py-1 rounded ${eventsNext ? "bg-card-background border hover:bg-gray-50" : "bg-gray-100 text-gray-400"}`}>Siguiente</button>
                     </div>
                 </div>
 
             </section>
 
             {/* -------- REPORTED COMMENTS -------- */}
-            <section className="bg-white p-5 rounded-lg shadow space-y-4">
+            <section className="bg-card-background p-5 rounded-lg shadow space-y-4">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <h3 className="text-lg font-semibold">Comentarios reportados</h3>
 
                     <div className="flex flex-wrap gap-2 items-center">
                         <input placeholder="Buscar..." value={commentsSearch} onChange={(e) => setCommentsSearch(e.target.value)} className="px-3 py-2 border rounded w-full md:w-auto" />
-                        <select value={commentsOrdering} onChange={(e) => setCommentsOrdering(e.target.value)} className="px-3 py-2 border rounded w-full md:w-auto">
-                            <option value="-latest_report_date">Últimos reportes</option>
-                            <option value="report_count">Más reportes</option>
-                        </select>
                     </div>
                 </div>
 
                 <div className="space-y-3 max-h-[360px] overflow-y-auto pr-2">
                     {commentsLoading ? <p>Cargando...</p> : (commentsTableRows.length === 0 ? <p className="text-sm text-gray-500">No hay comentarios reportados.</p> :
                         commentsTableRows.map(row => (
-                            <div key={row.id} className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-4 border rounded-lg bg-gray-50">
+                            <div key={row.id} className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-4 border rounded-lg bg-background">
                                 <div className="flex-1 space-y-1 max-w-3xl">
                                     <div className="font-medium">{row.content}</div>
                                     <div className="text-sm text-gray-600">Autor: {row.author}</div>
@@ -609,8 +612,8 @@ export default function AdminDashboard() {
                     <span className="text-sm text-gray-600">Mostrando {reportedComments.length} de {commentsCount}</span>
 
                     <div className="flex gap-2">
-                        <button disabled={!commentsPrev} onClick={() => loadReportedComments({ url: commentsPrev })} className={`px-3 py-1 rounded ${commentsPrev ? "bg-white border hover:bg-gray-50" : "bg-gray-100 text-gray-400"}`}>Anterior</button>
-                        <button disabled={!commentsNext} onClick={() => loadReportedComments({ url: commentsNext })} className={`px-3 py-1 rounded ${commentsNext ? "bg-white border hover:bg-gray-50" : "bg-gray-100 text-gray-400"}`}>Siguiente</button>
+                        <button disabled={!commentsPrev} onClick={() => loadReportedComments({ url: commentsPrev })} className={`px-3 py-1 rounded ${commentsPrev ? "bg-card-background border hover:bg-gray-50" : "bg-gray-100 text-gray-400"}`}>Anterior</button>
+                        <button disabled={!commentsNext} onClick={() => loadReportedComments({ url: commentsNext })} className={`px-3 py-1 rounded ${commentsNext ? "bg-card-background border hover:bg-gray-50" : "bg-gray-100 text-gray-400"}`}>Siguiente</button>
                     </div>
                 </div>
 

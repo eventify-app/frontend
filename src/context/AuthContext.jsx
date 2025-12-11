@@ -1,48 +1,41 @@
-// src/context/AuthContext.jsx
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useEffect, useState } from "react"
 
 const AuthContext = createContext()
 
-export function AuthProvider({ children }) {
+export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null)
   const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  const setTokenAndSave = (value) => {
-    setToken(value)
-    if (value) localStorage.setItem("token", value)
-    else localStorage.removeItem("token")
-  }
-
-  const setUserAndSave = (value) => {
-    setUser(value)
-    if (value) localStorage.setItem("user", JSON.stringify(value))
-    else localStorage.removeItem("user")
-  }
+  const [authLoaded, setAuthLoaded] = useState(false)
 
   useEffect(() => {
-    const savedToken = localStorage.getItem("token")
-    const savedUser = localStorage.getItem("user")
+    const storedToken = localStorage.getItem("token")
+    const storedUser = localStorage.getItem("user")
 
-    if (savedToken) setToken(savedToken)
-    if (savedUser) setUser(JSON.parse(savedUser))
+    if (storedToken) setToken(storedToken)
+    if (storedUser) setUser(JSON.parse(storedUser))
 
-    setLoading(false)
+    setAuthLoaded(true) // ⬅️ ahora ya cargó todo
   }, [])
 
+  const saveAuth = (token, user) => {
+    setToken(token)
+    setUser(user)
+    localStorage.setItem("token", token)
+    localStorage.setItem("user", JSON.stringify(user))
+  }
+
+  const logout = () => {
+    setToken(null)
+    setUser(null)
+    localStorage.removeItem("token")
+    localStorage.removeItem("user")
+  }
+
   return (
-    <AuthContext.Provider value={{
-      token,
-      user,
-      setToken: setTokenAndSave,
-      setUser: setUserAndSave,
-      loading
-    }}>
+    <AuthContext.Provider value={{ token, user, setToken, setUser, saveAuth, logout, authLoaded }}>
       {children}
     </AuthContext.Provider>
   )
 }
 
-export function useAuth() {
-  return useContext(AuthContext)
-}
+export const useAuth = () => useContext(AuthContext)

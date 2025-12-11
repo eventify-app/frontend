@@ -48,7 +48,11 @@ const Login = () => {
       setToken(data.access)
       setUser(data.user)
 
-      navigate("/explorer")
+      if (data.user?.is_admin) {
+        navigate("/admin-dashboard")
+      } else {
+        navigate("/explorer")
+      }
     } catch (err) {
       console.error("Error de login:", err)
       setError("Usuario o contraseña incorrectos")
