@@ -184,9 +184,6 @@ export default function EventFeedback({ eventId, userId, isOrganizer }) {
   </>
 )}
 
-
-      {error && <p className="text-red-500 mt-2">{error}</p>}
-
       {/* Lista de comentarios */}
       <h3 className="text-lg font-semibold mt-8 mb-4">
         Comentarios recientes

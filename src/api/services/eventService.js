@@ -19,6 +19,11 @@ export const eventService = {
     return res.data;
   },
 
+  getMyRatingsAverage: async () => {
+    const res = await axiosInstance.get("/events/my-ratings-average/");
+    return res.data;
+  },
+
   async reportEvent(eventId, reason) {
     const formData = new FormData();
     formData.append("reason", reason);

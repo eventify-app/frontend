@@ -8,6 +8,18 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  const setTokenAndSave = (value) => {
+    setToken(value)
+    if (value) localStorage.setItem("token", value)
+    else localStorage.removeItem("token")
+  }
+
+  const setUserAndSave = (value) => {
+    setUser(value)
+    if (value) localStorage.setItem("user", JSON.stringify(value))
+    else localStorage.removeItem("user")
+  }
+
   useEffect(() => {
     const savedToken = localStorage.getItem("token")
     const savedUser = localStorage.getItem("user")
@@ -19,7 +31,13 @@ export function AuthProvider({ children }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ token, user, setToken, setUser, loading }}>
+    <AuthContext.Provider value={{
+      token,
+      user,
+      setToken: setTokenAndSave,
+      setUser: setUserAndSave,
+      loading
+    }}>
       {children}
     </AuthContext.Provider>
   )

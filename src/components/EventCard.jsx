@@ -14,7 +14,6 @@ const EventCard = ({
   showOwnerActions = false,
   hour,
   participants,
-  is_enrolled,
   max_capacity,
   creator
 }) => {

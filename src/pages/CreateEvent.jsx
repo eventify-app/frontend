@@ -57,7 +57,7 @@ const CreateEvent = () => {
         start_date: normalizeDate(eventToEdit.start_date),
         start_time: eventToEdit.start_time ?? normalizeTime(eventToEdit.start_date),
         end_date: normalizeDate(eventToEdit.end_date),
-        end_time: normalizeTime(eventToEdit.end_date),
+        end_time: eventToEdit.end_time ?? normalizeTime(eventToEdit.end_date),
         max_capacity: eventToEdit.max_capacity || "",
       });
 

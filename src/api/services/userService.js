@@ -4,9 +4,8 @@ export const userService = {
   // =====================================================
   // OBTENER PERFIL POR ID (ya existente)
   // =====================================================
-  async getUserById(id) {
-    const res = await axiosInstance.get(`/users/${id}/`);
-    return res.data;
+  getUserById(id) {
+    return axiosInstance.get(`/users/${id}/detail/`).then(res => res.data);
   },
 
   // =====================================================
@@ -67,4 +66,5 @@ export const userService = {
     const res = await axiosInstance.post("/users/change-email/verify/", body);
     return res.data;
   },
+  
 };

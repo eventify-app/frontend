@@ -1,3 +1,5 @@
+import axios from "axios";
+
 export const setupInterceptors = (axiosInstance) => {
   let isRefreshing = false;
   let failedQueue = [];
@@ -32,17 +34,32 @@ export const setupInterceptors = (axiosInstance) => {
       const originalRequest = error.config;
       const status = error.response?.status;
 
+      // ⛔ EVITAR REFRESH en la pantalla de LOGIN
+      // Si la petición fallida es /login o estás en /login
+      if (
+        window.location.pathname === "/login" ||
+        originalRequest?.url?.includes("/login")
+      ) {
+        return Promise.reject(error);
+      }
+
+      // ----- MANEJO DE 401 -----
       if (status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
 
-        const refreshToken = localStorage.getItem("refreshToken");
+        const refreshToken = localStorage.getItem("refresh");
+
+        // Si NO hay refresh token → cerrar sesión y redirigir
         if (!refreshToken) {
           localStorage.removeItem("token");
-          window.location.href = "/login";
+          localStorage.removeItem("refresh");
+          localStorage.removeItem("user");
+
+          window.location.href = "/login"; // Aquí sí es correcto refrescar
           return Promise.reject(error);
         }
 
-        // Si YA hay un refresh token en curso → ponemos esta request en cola
+        // Si YA hay un refresh en proceso → agregar a cola
         if (isRefreshing) {
           return new Promise((resolve, reject) => {
             failedQueue.push({ resolve, reject });
@@ -52,34 +69,36 @@ export const setupInterceptors = (axiosInstance) => {
           });
         }
 
+        // Ejecutar refresh token
         isRefreshing = true;
 
         try {
-          // Llamada al refresh del backend
           const { data } = await axiosInstance.post("/token/refresh/", {
             refresh: refreshToken,
           });
 
           const newAccessToken = data.access;
 
-          // Guardar nuevo token
+          // Guardar el nuevo token
           localStorage.setItem("token", newAccessToken);
 
-          // Update default header
+          // Actualizar auth headers por defecto
           axiosInstance.defaults.headers.Authorization = `Bearer ${newAccessToken}`;
 
           // Procesar cola
           processQueue(null, newAccessToken);
 
-          // Reintentar request original
+          // Reintentar petición original
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return axiosInstance(originalRequest);
 
         } catch (refreshError) {
           processQueue(refreshError, null);
 
+          // El refresh token falló → cerrar sesión
           localStorage.removeItem("token");
-          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("refresh");
+          localStorage.removeItem("user");
 
           window.location.href = "/login";
 

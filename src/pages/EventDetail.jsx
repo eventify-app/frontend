@@ -374,9 +374,11 @@ const EventDetail = () => {
             <ParticipantsSection eventId={numericId} isOrganizer={isOrganizer} />
           </div>
 
-          <div className="row-start-5">
-            <EventFeedback eventId={numericId} userId={user?.id} isOrganizer={isOrganizer} />
-          </div>
+          {is_finished && (
+            <div className="row-start-5">
+              <EventFeedback eventId={numericId} userId={user?.id} isOrganizer={isOrganizer} />
+            </div>
+          )}
 
         </div>
 
