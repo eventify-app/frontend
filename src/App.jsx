@@ -51,7 +51,7 @@ function App() {
 
   return (
     <>
-      <BrowserRouter viewTransition>
+      <BrowserRouter>
         <Header />
         <Routes>
           {/* Página principal */}
