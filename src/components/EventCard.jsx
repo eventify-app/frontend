@@ -31,7 +31,7 @@ const EventCard = ({
     : "Próximamente";
 
   return (
-    <article className="overflow-hidden flex flex-col flex-1 bg-card-background dark: rounded-xl gap-4 pb-6 shadow-sm hover:shadow-lg transition-all hover:shadow-xl hover:-translate-y-1">
+    <article className="overflow-hidden flex flex-col flex-1 bg-card-background dark: rounded-xl gap-4 pb-6 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1">
 
       
       <header>

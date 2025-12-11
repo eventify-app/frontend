@@ -195,9 +195,25 @@ const ProfilePage = () => {
           selectedFile={selectedFile}
           setSelectedFile={setSelectedFile}
           onCropComplete={(backendAvatarUrl) => {
-            setProfile((p) => ({ ...p, profile_photo: backendAvatarUrl }));
+            // 1️⃣ Actualiza el estado local
+            setProfile((p) => {
+              const updatedProfile = { ...p, profile_photo: backendAvatarUrl };
+
+              // 2️⃣ Actualiza localStorage si es el usuario actual
+              if (isCurrentUser) {
+                const updatedUser = { ...storedUser, profile_photo: backendAvatarUrl };
+                localStorage.setItem("user", JSON.stringify(updatedUser));
+
+                // 3️⃣ 🔥 Notifica a toda la app que hubo un cambio
+                window.dispatchEvent(new Event("user-updated"));
+              }
+
+              return updatedProfile;
+            });
           }}
         />
+
+
       )}
     </Main>
   );
