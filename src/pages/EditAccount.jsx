@@ -164,7 +164,7 @@ const EditAccount = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
 
             {/* USERNAME */}
-            <div className="flex flex-col">
+            <div className="flex flex-col gap-1">
               <Label htmlFor="username" className="font-semibold">Nombre de usuario</Label>
               <Input id="username" value={formData.username} onChange={handleChange} />
 
@@ -230,7 +230,7 @@ const EditAccount = () => {
         {/* ================================ */}
         <Card className="mt-10 p-8 shadow-md">
           <h2 className="text-xl font-bold">Correo electrónico</h2>
-          <p className="text-gray-600">Correo actual: {email}</p>
+          <p className="text-muted">Correo actual: {email}</p>
 
           {!emailRequested ? (
             <>

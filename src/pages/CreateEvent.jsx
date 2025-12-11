@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { eventService } from "../api/services/eventService";
 import Main from "../layouts/Main";
@@ -26,7 +26,6 @@ const normalizeTime = (dateString) => {
 const CreateEvent = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -42,8 +41,11 @@ const CreateEvent = () => {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [coverImage, setCoverImage] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [dragActive, setDragActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const inputRef = useRef(null);
 
   // ======= PRE-CARGA DE EDICIÓN =======
   useEffect(() => {
@@ -79,12 +81,35 @@ const CreateEvent = () => {
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
+  const handleFiles = (files) => {
+    const file = files[0];
     if (file) {
       setCoverImage(file);
       setPreview(URL.createObjectURL(file));
     }
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFiles(e.dataTransfer.files);
+    }
+  };
+
+  const handleClickInput = () => {
+    inputRef.current.click();
   };
 
   const toggleCategory = (id) => {
@@ -96,9 +121,6 @@ const CreateEvent = () => {
     );
   };
 
-  // =============================
-  //   VALIDACIÓN DE HORAS (solo tiempo)
-  // =============================
   const validateTimes = () => {
     const start = formData.start_time;
     const end = formData.end_time;
@@ -225,22 +247,39 @@ const CreateEvent = () => {
             />
           </div>
 
-          {/* Imagen */}
-          <div className="flex flex-col items-center p-6 border-2 border-dashed border-gray-300 rounded-xl bg-background cursor-pointer">
-            <label htmlFor="cover_image" className="cursor-pointer">
-              {preview ? (
-                <img src={preview} alt="Vista previa" className="rounded-xl max-h-64 object-cover" />
-              ) : (
-                <p className="text-muted">Subir imagen</p>
-              )}
-            </label>
+          {/* Imagen Drag & Drop */}
+          <div
+            className={`flex flex-col items-center p-6 border-2 border-dashed rounded-xl bg-background cursor-pointer transition-colors ${
+              dragActive ? "border-primary bg-primary/10" : "border-gray-300"
+            }`}
+            onDragEnter={handleDrag}
+            onDragOver={handleDrag}
+            onDragLeave={handleDrag}
+            onDrop={handleDrop}
+            onClick={handleClickInput}
+          >
+            {preview ? (
+              <img
+                src={preview}
+                alt="Vista previa"
+                className="rounded-xl max-h-64 object-cover"
+              />
+            ) : (
+              <div className="flex flex-col items-center gap-2 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15" />
+                </svg>
 
+                <p className="text-muted">Arrastra la imagen aquí o haz click para subir</p>
+              </div>
+            )}
             <input
               id="cover_image"
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={handleImageChange}
+              ref={inputRef}
+              onChange={(e) => handleFiles(e.target.files)}
             />
           </div>
 

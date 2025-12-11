@@ -45,7 +45,6 @@ const EventDetail = () => {
     setTimeout(() => setFeedback({ message: "", type: "" }), 3000);
   };
 
-
   const handleGoBack = () => {
     const from = location.state?.from;
     if (from) {
@@ -64,7 +63,6 @@ const EventDetail = () => {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [feedback, setFeedback] = useState({ message: "", type: "" });
 
   useEffect(() => {
@@ -154,12 +152,7 @@ const EventDetail = () => {
       minute: "2-digit",
     });
 
-
-  /* ------------------------------------------------------------------
-      🔥 BOTÓN DINÁMICO SEGÚN ESTADO DEL EVENTO + ORGANIZADOR
-  ------------------------------------------------------------------ */
   const renderActionButton = () => {
-    // ORGANIZADOR
     if (isOrganizer) {
       if (is_upcoming) {
         return (
@@ -193,7 +186,6 @@ const EventDetail = () => {
       );
     }
 
-    // PARTICIPANTES / USUARIO NORMAL
     if (is_upcoming) {
       return (
         <button
@@ -228,7 +220,6 @@ const EventDetail = () => {
     );
   };
 
-
   return (
     <Main>
       <>
@@ -241,58 +232,70 @@ const EventDetail = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-[7fr_2fr] w-full gap-6">
+        {/* Contenedor principal responsive */}
+        <div className="flex flex-col lg:grid lg:grid-cols-[7fr_2fr] w-full gap-6">
         
+          {/* Header con imagen de portada */}
           <div
-            className="w-full h-80 rounded-xl bg-cover bg-center flex flex-col justify-between pt-6 flex-8"
+            className="w-full h-64 md:h-80 rounded-xl bg-cover bg-center flex flex-col justify-between pt-4 md:pt-6"
             style={{
               backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.6), transparent 40%), url(${cover_image})`,
             }}
           >
-            <div className="flex justify-between pr-5">
-            {canGoBack && (
-              <Link
-                onClick={() => {
-                  if (!document.startViewTransition) return handleGoBack();
-                  document.startViewTransition(() => handleGoBack());
-                }}
-                className="ml-6 flex items-center shadow-lg gap-2 text-black font-medium py-2 px-3 w-fit rounded-xl bg-gray-100 hover:underline"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-left h-4 w-4 mr-2" aria-hidden="true"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
-                Volver
-              </Link>
-            )}
+            {/* Botones superiores */}
+            <div className="flex justify-between px-4 md:pr-5">
+              {canGoBack && (
+                <Link
+                  onClick={() => {
+                    if (!document.startViewTransition) return handleGoBack();
+                    document.startViewTransition(() => handleGoBack());
+                  }}
+                  className="flex items-center shadow-lg gap-2 text-black font-medium py-2 px-3 w-fit rounded-xl bg-gray-100 hover:underline"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 mr-1">
+                    <path d="m12 19-7-7 7-7"></path>
+                    <path d="M19 12H5"></path>
+                  </svg>
+                  <span className="hidden sm:inline">Volver</span>
+                </Link>
+              )}
 
               <button
                 onClick={openReportModal}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg shadow-lg hover:bg-red-700 transition-all cursor-pointer"
+                className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 bg-red-600 text-white rounded-lg shadow-lg hover:bg-red-700 transition-all cursor-pointer text-sm md:text-base"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 9v4"></path>
                   <path d="M12 17h.01"></path>
                   <circle cx="12" cy="12" r="10"></circle>
                 </svg>
-                Reportar evento
+                <span className="hidden sm:inline">Reportar</span>
               </button>
             </div>
             
-
-            <div className="p-6 md:p-8">
-              <h1 className="text-white text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
+            {/* Título del evento */}
+            <div className="p-4 md:p-6 lg:p-8">
+              <h1 className="text-white text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tight">
                 {title}
               </h1>
             </div>
           </div>
 
-          <aside className="sticky top-28 flex-2 h-fit flex flex-col gap-4 rounded-lg bg-background shadow-md p-6 border border-gray-100">
+          {/* Sidebar - se mueve debajo en mobile */}
+          <aside className="lg:sticky lg:top-28 h-fit flex flex-col gap-4 rounded-lg bg-background shadow-md p-4 md:p-6 border border-gray-100 mt-6 lg:mt-0">
 
             <div className="flex items-center justify-between">
               <div className="flex gap-2 items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users h-5 w-5 text-primary" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><path d="M16 3.128a4 4 0 0 1 0 7.744"></path><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                  <path d="M16 3.128a4 4 0 0 1 0 7.744"></path>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                </svg>
                 <p className="font-medium">Asistentes</p>
               </div>
 
-              <p className="font-bold text-2xl">{participants_count}</p>
+              <p className="font-bold text-xl md:text-2xl">{participants_count}</p>
             </div>
 
             {max_capacity && (
@@ -301,54 +304,78 @@ const EventDetail = () => {
                   De {max_capacity} cupos disponibles
                 </p>
 
-                <div aria-valuemax={max_capacity} aria-valuemin="0" role="progressbar" className="bg-primary/20 relative w-full overflow-hidden rounded-full h-2">
-                  <div className="bg-primary h-full w-full flex-1 transition-all" style={{ transform: `translateX(-${participants_count / max_capacity * 100}%)` }}></div>
+                <div 
+                  aria-valuemax={max_capacity} 
+                  aria-valuemin="0" 
+                  role="progressbar" 
+                  className="bg-primary/20 relative w-full overflow-hidden rounded-full h-2"
+                >
+                  <div 
+                    className="bg-primary h-full w-full flex-1 transition-all" 
+                    style={{ 
+                      width: `${(participants_count / max_capacity) * 100}%`,
+                      transform: `translateX(-${100 - (participants_count / max_capacity) * 100}%)`
+                    }}
+                  ></div>
                 </div>
 
                 <p className="text-sm text-muted">{max_capacity - participants_count} cupos restantes</p>
               </div>
             )}
 
-            {/* 🔥 BOTÓN SEGÚN ESTADO */}
+            {/* Botón de acción principal */}
             {renderActionButton()}
 
           </aside>
 
-          <div className="flex flex-col gap-4">
-            <h2 className="text-3xl font-semibold">Detalles del evento</h2>
+          {/* Detalles del evento */}
+          <div className="flex flex-col gap-4 mt-6 lg:mt-0">
+            <h2 className="text-2xl md:text-3xl font-semibold">Detalles del evento</h2>
 
-            <div className="flex items-center gap-6 bg-background p-6 rounded-2xl border shadow-lg">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6 bg-background p-4 md:p-6 rounded-2xl border shadow-lg">
 
-              <div className="flex flex-1 gap-3 items-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-100">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-calendar h-5 w-5 text-primary"><path d="M8 2v4"></path><path d="M16 2v4"></path><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M3 10h18"></path></svg>
+              {/* Fecha */}
+              <div className="flex flex-1 gap-3 items-center w-full sm:w-auto">
+                <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-lg bg-indigo-100 flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                    <path d="M8 2v4"></path><path d="M16 2v4"></path>
+                    <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+                    <path d="M3 10h18"></path>
+                  </svg>
                 </div>
 
                 <div className="flex flex-col">
-                  <h3 className="text-muted text-sm">Fecha</h3>
-                  <p className="text-md font-semibold">
+                  <h3 className="text-muted text-xs md:text-sm">Fecha</h3>
+                  <p className="text-sm md:text-base font-semibold">
                     {start_date === end_date
                       ? formatDate(start_date)
                       : `${formatDate(start_date)} a ${formatDate(end_date)}`}
                   </p>
-                  <p className="text-md font-semibold">{formatTime(start_time)} - {formatTime(end_time)}</p>
+                  <p className="text-sm md:text-base font-semibold">
+                    {formatTime(start_time)} - {formatTime(end_time)}
+                  </p>
                 </div>
               </div>
 
-              <div className="flex flex-1 gap-3 items-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-map-pin h-5 w-5 text-purple-600"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              {/* Ubicación */}
+              <div className="flex flex-1 gap-3 items-center w-full sm:w-auto">
+                <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-lg bg-purple-100 flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600">
+                    <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
                 </div>
 
                 <div>
-                  <h3 className="text-muted text-sm">Ubicación</h3>
-                  <p className="text-md font-semibold">{place}</p>
+                  <h3 className="text-muted text-xs md:text-sm">Ubicación</h3>
+                  <p className="text-sm md:text-base font-semibold">{place}</p>
                 </div>
               </div>
 
-              <div className="flex flex-1 gap-3 items-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-pink-100">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-circle-user-round h-5 w-5 text-pink-600">
+              {/* Organizador */}
+              <div className="flex flex-1 gap-3 items-center w-full sm:w-auto">
+                <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-lg bg-pink-100 flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-pink-600">
                     <path d="M18 20a6 6 0 0 0-12 0"></path>
                     <circle cx="12" cy="10" r="4"></circle>
                     <circle cx="12" cy="12" r="10"></circle>
@@ -356,8 +383,8 @@ const EventDetail = () => {
                 </div>
 
                 <div>
-                  <h3 className="text-muted text-sm">Organizador</h3>
-                  <p className="text-md font-semibold">{id_creator?.first_name} {id_creator?.last_name}</p>
+                  <h3 className="text-muted text-xs md:text-sm">Organizador</h3>
+                  <p className="text-sm md:text-base font-semibold">{id_creator?.first_name} {id_creator?.last_name}</p>
                 </div>
               </div>
 
@@ -365,57 +392,61 @@ const EventDetail = () => {
 
           </div>
 
-          <div className="row-start-3 px-6 py-5 bg-card-background rounded-2xl border shadow-lg gap-3 flex flex-col">
-            <h2 className="text-xl font-semibold">Descripción</h2>
-            <p className="text-lg">{description}</p>
+          {/* Descripción */}
+          <div className="px-4 md:px-6 py-4 md:py-5 md:row-start-3 bg-card-background rounded-2xl border shadow-lg gap-3 flex flex-col mt-6 lg:mt-0">
+            <h2 className="text-lg md:text-xl font-semibold">Descripción</h2>
+            <p className="text-base md:text-lg">{description}</p>
           </div>
 
-          <div className="row-start-4">
+          {/* Sección de participantes */}
+          <div className="mt-6 md:row-start-4 lg:mt-0">
             <ParticipantsSection eventId={numericId} isOrganizer={isOrganizer} />
           </div>
 
+          {/* Feedback (si el evento finalizó) */}
           {is_finished && (
-            <div className="row-start-5">
+            <div className="mt-6 md:row-start-5 lg:mt-0">
               <EventFeedback eventId={numericId} userId={user?.id} isOrganizer={isOrganizer} />
             </div>
           )}
 
         </div>
 
+        {/* Modal de reporte */}
         {showReportModal && (
-  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-    <div className="bg-card-background w-96 p-6 rounded-xl shadow-xl">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-card-background w-full max-w-md p-4 md:p-6 rounded-xl shadow-xl">
 
-      <h3 className="text-xl font-semibold mb-3">Reportar evento</h3>
-      <p className="text-sm mb-3">
-        Cuéntanos la razón por la que consideras este evento inapropiado.
-      </p>
+              <h3 className="text-lg md:text-xl font-semibold mb-3">Reportar evento</h3>
+              <p className="text-xs md:text-sm mb-3">
+                Cuéntanos la razón por la que consideras este evento inapropiado.
+              </p>
 
-      <textarea
-        value={reportReason}
-        onChange={(e) => setReportReason(e.target.value)}
-        placeholder="Escribe aquí..."
-        className="w-full border rounded p-3 h-28 mb-4"
-      />
+              <textarea
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value)}
+                placeholder="Escribe aquí..."
+                className="w-full border rounded p-3 h-28 mb-4 text-sm md:text-base"
+              />
 
-      <div className="flex justify-end gap-3">
-        <button
-          onClick={() => setShowReportModal(false)}
-          className="px-3 py-2 bg-background rounded cursor-pointer"
-        >
-          Cancelar
-        </button>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowReportModal(false)}
+                  className="px-3 py-2 bg-background rounded cursor-pointer text-sm md:text-base"
+                >
+                  Cancelar
+                </button>
 
-        <button
-          onClick={submitEventReport}
-          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 cursor-pointer"
-        >
-          Enviar reporte
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+                <button
+                  onClick={submitEventReport}
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 cursor-pointer text-sm md:text-base"
+                >
+                  Enviar reporte
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </>
     </Main>

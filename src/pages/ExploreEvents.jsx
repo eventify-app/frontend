@@ -70,6 +70,8 @@ const ExploreEventsPage = () => {
 
   return (
     <Main>
+      <div className="w-full h-full">
+
       <h1 ref={topRef} className="text-3xl font-bold self-start mb-4">
         Descubre eventos
       </h1>
@@ -211,6 +213,8 @@ const ExploreEventsPage = () => {
           Siguiente →
         </Button>
       </div>
+      </div>
+
     </Main>
   );
 };
