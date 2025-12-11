@@ -10,36 +10,55 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 export function CalendarInput({ dateValue, timeValue, onChange }) {
   const [open, setOpen] = useState(false)
-  const [date, setDate] = useState(dateValue ? new Date(dateValue) : null)
+
+  // ---- UTILIDADES PARA FECHAS ----
+
+  // Convertir "2025-01-20" → Date sin UTC
+  const parseLocalDate = (value) => {
+    if (!value) return null
+    const [y, m, d] = value.split("-").map(Number)
+    return new Date(y, m - 1, d)  // <-- Local, sin UTC
+  }
+
+  // Convertir Date → "YYYY-MM-DD"
+  const formatDate = (date) =>
+    date ? date.toLocaleDateString("en-CA") : ""
+
+  // ---- ESTADOS ----
+  const [date, setDate] = useState(dateValue ? parseLocalDate(dateValue) : null)
   const [time, setTime] = useState(timeValue || "")
 
-  // 🔄 SINCRONIZAR FECHA SI CAMBIA DESDE EL PADRE
+  // Sincronizar fecha desde el padre
   useEffect(() => {
-    setDate(dateValue ? new Date(dateValue) : null)
+    setDate(dateValue ? parseLocalDate(dateValue) : null)
   }, [dateValue])
 
-  // 🔄 SINCRONIZAR HORA SI CAMBIA DESDE EL PADRE
+  // Sincronizar hora desde el padre
   useEffect(() => {
     setTime(timeValue || "")
   }, [timeValue])
 
+  // ---- MANEJADORES ----
   const handleDateSelect = (selectedDate) => {
     setDate(selectedDate)
+
     if (onChange) {
       onChange({
-        date: selectedDate ? selectedDate.toISOString().split("T")[0] : "",
+        date: selectedDate ? formatDate(selectedDate) : "",
         time,
       })
     }
+
     setOpen(false)
   }
 
   const handleTimeChange = (e) => {
     const newTime = e.target.value.split(":").slice(0, 2).join(":")
     setTime(newTime)
+
     if (onChange) {
       onChange({
-        date: date ? date.toISOString().split("T")[0] : "",
+        date: date ? formatDate(date) : "",
         time: newTime,
       })
     }
@@ -53,6 +72,7 @@ export function CalendarInput({ dateValue, timeValue, onChange }) {
       {/* Fecha */}
       <div className="flex flex-col gap-1">
         <Label htmlFor="date-picker" className="px-1">Fecha</Label>
+
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -64,6 +84,7 @@ export function CalendarInput({ dateValue, timeValue, onChange }) {
               <ChevronDownIcon />
             </Button>
           </PopoverTrigger>
+
           <PopoverContent className="w-auto overflow-hidden p-0" align="start">
             <Calendar
               mode="single"

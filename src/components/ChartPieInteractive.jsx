@@ -46,7 +46,7 @@ export function ChartPieInteractive({ data }) {
   // adapt backend → asistentes
   const chartData = data.map((item, index) => ({
     category: item.category?.type || "Sin categoría",
-    value: item.total_assistants || 0,
+    value: item.total_attended || 0, // ✅ corregido
     fill: COLORS[index % COLORS.length],
   }))
 

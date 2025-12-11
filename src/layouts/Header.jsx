@@ -7,8 +7,27 @@ import ThemeToggle from "../components/ThemeToggle"
 const Header = () => {
   const { token, setToken } = useAuth()
   const [openMenu, setOpenMenu] = useState(false)
+  const [avatar, setAvatar] = useState("/assets/avatar-profile.png")
   const menuRef = useRef()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const updateAvatar = () => {
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      if (storedUser?.profile_photo) {
+        setAvatar(storedUser.profile_photo);
+      }
+    };
+
+    // Escucha cuando ProfilePage dispara el evento
+    window.addEventListener("user-updated", updateAvatar);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("user-updated", updateAvatar);
+    };
+  }, []);
+
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -23,22 +42,29 @@ const Header = () => {
     }
   }, [])
 
-  // Función centralizada de logout
+  // Leer avatar del storage al montar el componente
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"))
+    if (storedUser && storedUser.profile_photo) {
+      setAvatar(storedUser.profile_photo)
+    }
+  }, [])
+
   const handleLogout = () => {
-    authService.logout(); // llama al servicio que limpia el token
-    setToken(null);       // limpia el contexto
-    navigate("/");        // redirige al inicio (usando useNavigate)
-  };
+    authService.logout()
+    setToken(null)
+    navigate("/")
+  }
 
   return (
-    <header className="fixed top-0 my-3 w-full rounded-2xl max-w-340 px-8 py-4 bg-card-background/75 backdrop-blur-xs border z-50">
+    <header className="fixed top-0 my-3 w-full rounded-2xl max-w-340 px-8 py-4 bg-card-background/75 border z-50">
       <div className="max-w-7xl flex justify-between m-auto items-center">
 
+        {/* Logo */}
         <a className="flex items-center gap-2" href="/">
           <svg className='h-9 text-indigo-500' fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
             <path d="M4 42.4379C4 42.4379 14.0962 36.0744 24 41.1692C35.0664 46.8624 44 42.2078 44 42.2078L44 7.01134C44 7.01134 35.068 11.6577 24.0031 5.96913C14.0971 0.876274 4 7.27094 4 7.27094L4 42.4379Z" fill="currentColor"></path>
           </svg>
-
           <h2 className="text-xl font-bold">Eventify</h2>
         </a>
 
@@ -57,7 +83,7 @@ const Header = () => {
                 ({ isActive }) => `hover:bg-amber-100 rounded-lg px-4 py-2 flex items-center
                 ${ isActive ? "bg-indigo-600 hover:bg-indigo-600/90 text-white" : "text-primary"}` }
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar h-5 w-5 mr-2" aria-hidden="true"><path d="M8 2v4"></path><path d="M16 2v4"></path><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M3 10h18"></path></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-calendar h-5 w-5 mr-2" aria-hidden="true"><path d="M8 2v4"></path><path d="M16 2v4"></path><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M3 10h18"></path></svg>
                   Calendario
               </NavLink>
               <NavLink to="/my-events" className={
@@ -74,51 +100,52 @@ const Header = () => {
         <div className="flex gap-3 items-center">
           <ThemeToggle />
 
-          {
-            token
-              ? (
-                <div className="relative top-0.5" ref={menuRef}>
-                  <button
-                    onClick={() => setOpenMenu(!openMenu)}
-                    className="focus:outline-none"
-                  >
-                    <img
-                      src="https://tero.coop/wp-content/uploads/2022/01/photo-avatar-profil-1-768x768.png"
-                      alt="Avatar"
-                      className="h-7 w-7 rounded-full border-2 border-primary"
-                    />
-                  </button>
+          {token ? (
+            <div className="relative top-0.5" ref={menuRef}>
+              <button
+                onClick={() => setOpenMenu(!openMenu)}
+                className="focus:outline-none"
+              >
+                <img
+                  src={avatar || "/assets/avatar-profile.png"}
+                  alt="Avatar"
+                  className="h-8 w-8 rounded-full border-2 border-primary"
+                />
+              </button>
 
-                  {openMenu && (
-                    <div className="absolute -left-16 mt-2 w-44 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
-                      <div className="py-2">
-                        <NavLink
-                          to="/profile"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          Ver perfil
-                        </NavLink>
-                        <button
-                          onClick={handleLogout} //  Usa la función centralizada
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          Cerrar sesión
-                        </button>
-                      </div>
-                    </div>
-                  )}
+              {openMenu && (
+                <div className="absolute -left-16 mt-2 w-44 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                  <div className="py-2">
+                    <NavLink
+                      to="/my-profile"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Ver perfil
+                    </NavLink>
+                    <NavLink
+                      to="/edit-account"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Editar cuenta
+                    </NavLink>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Cerrar sesión
+                    </button>
+                  </div>
                 </div>
-              )
-              : (
-                <div className="flex gap-4 items-center">
-                  <a href="/login" className="font-bold text-primary hover:text-primary/75">Ingresar</a>
-                  <a href="/register">
-                    <button className="cursor-pointer p-3 bg-primary transition-colors hover:bg-primary/70 font-bold shadow-lg shadow-primary/20 text-white rounded-full">Registrarse</button>
-                  </a>
-                </div>
-              )
-          }
-
+              )}
+            </div>
+          ) : (
+            <div className="flex gap-4 items-center">
+              <a href="/login" className="font-bold text-primary hover:text-primary/75">Ingresar</a>
+              <a href="/register">
+                <button className="cursor-pointer p-3 bg-primary transition-colors hover:bg-primary/70 font-bold shadow-lg shadow-primary/20 text-white rounded-full">Registrarse</button>
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </header>

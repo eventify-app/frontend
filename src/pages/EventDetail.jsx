@@ -18,6 +18,34 @@ const EventDetail = () => {
   const isDirectLoad = navigationType === "POP" && !cameFromState && !referrer;
   const canGoBack = !isDirectLoad;
 
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+
+  const openReportModal = () => {
+    setReportReason("");
+    setShowReportModal(true);
+  };
+
+  const submitEventReport = async () => {
+    if (!reportReason.trim()) return;
+
+    const formData = new FormData();
+    formData.append("reason", reportReason);
+
+    try {
+      await eventService.reportEvent(numericId, formData);
+
+      setShowReportModal(false);
+      setFeedback({ message: "Reporte enviado correctamente", type: "success" });
+    } catch (err) {
+      console.error(err);
+      setFeedback({ message: "Error al enviar el reporte", type: "error" });
+    }
+
+    setTimeout(() => setFeedback({ message: "", type: "" }), 3000);
+  };
+
+
   const handleGoBack = () => {
     const from = location.state?.from;
     if (from) {
@@ -221,6 +249,7 @@ const EventDetail = () => {
               backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.6), transparent 40%), url(${cover_image})`,
             }}
           >
+            <div className="flex justify-between pr-5">
             {canGoBack && (
               <Link
                 onClick={() => {
@@ -233,6 +262,20 @@ const EventDetail = () => {
                 Volver
               </Link>
             )}
+
+              <button
+                onClick={openReportModal}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg shadow-lg hover:bg-red-700 transition-all cursor-pointer"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 9v4"></path>
+                  <path d="M12 17h.01"></path>
+                  <circle cx="12" cy="12" r="10"></circle>
+                </svg>
+                Reportar evento
+              </button>
+            </div>
+            
 
             <div className="p-6 md:p-8">
               <h1 className="text-white text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
@@ -332,10 +375,46 @@ const EventDetail = () => {
           </div>
 
           <div className="row-start-5">
-            <EventFeedback eventId={numericId} userId={user?.id} />
+            <EventFeedback eventId={numericId} userId={user?.id} isOrganizer={isOrganizer} />
           </div>
 
         </div>
+
+        {showReportModal && (
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="bg-card-background w-96 p-6 rounded-xl shadow-xl">
+
+      <h3 className="text-xl font-semibold mb-3">Reportar evento</h3>
+      <p className="text-sm mb-3">
+        Cuéntanos la razón por la que consideras este evento inapropiado.
+      </p>
+
+      <textarea
+        value={reportReason}
+        onChange={(e) => setReportReason(e.target.value)}
+        placeholder="Escribe aquí..."
+        className="w-full border rounded p-3 h-28 mb-4"
+      />
+
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => setShowReportModal(false)}
+          className="px-3 py-2 bg-background rounded cursor-pointer"
+        >
+          Cancelar
+        </button>
+
+        <button
+          onClick={submitEventReport}
+          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 cursor-pointer"
+        >
+          Enviar reporte
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
       </>
     </Main>
   );

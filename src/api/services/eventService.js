@@ -11,6 +11,29 @@ export const eventService = {
     return res.data;
   },
 
+  async createEventRating(eventId, payload) {
+    const res = await axiosInstance.post(
+      `/events/${eventId}/ratings/`,
+      payload
+    );
+    return res.data;
+  },
+
+  async reportEvent(eventId, reason) {
+    const formData = new FormData();
+    formData.append("reason", reason);
+
+    const res = await axiosInstance.post(
+      `/events/${eventId}/report/`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+
+    return res.data;
+  },
+
   async markAttendance(eventId, participantId) {
     const formData = new FormData();
     formData.append("participant_id", participantId);
@@ -134,5 +157,20 @@ export const eventService = {
     const res = await axiosInstance.get("/categories/");
     return res.data.results; // devolvemos solo la lista de categorías
   },
+
+  async reportComment(eventId, commentId, body) {
+    const res = await axiosInstance.post(
+      `/events/${eventId}/comments/${commentId}/report/`,
+      body
+    );
+    return res.data;
+  },
+
+  reportEvent(eventId, data) {
+    return axiosInstance.post(`/events/${eventId}/report/`, data, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+  },
+
 
 };

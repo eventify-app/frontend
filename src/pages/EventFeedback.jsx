@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { eventService } from "../api/services/eventService";
 
-const Comment = ({ comment }) => {
-  // Sacamos iniciales para el avatar si no hay foto
+import { RatingStars } from "../components/Rating";
+import { Button } from "@/components/ui/button";
+
+const Comment = ({ comment, onReport }) => {
   const initials = comment.author
     .split(" ")
     .map((n) => n[0])
@@ -11,7 +13,6 @@ const Comment = ({ comment }) => {
 
   return (
     <div className="flex gap-3 p-3 bg-card-background shadow-sm rounded-xl mb-4 border">
-      {/* Avatar genérico */}
       <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
         {initials}
       </div>
@@ -19,9 +20,19 @@ const Comment = ({ comment }) => {
       <div className="flex-1">
         <div className="flex items-center justify-between">
           <p className="font-semibold">{comment.author}</p>
-          <span className="text-xs text-muted">
-            {new Date(comment.created_at).toLocaleDateString()}
-          </span>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted">
+              {new Date(comment.created_at).toLocaleDateString()}
+            </span>
+
+            <button
+              onClick={() => onReport(comment)}
+              className="text-red-500 hover:text-red-700 text-sm"
+            >
+              Reportar
+            </button>
+          </div>
         </div>
 
         <p className="text-lg">{comment.content}</p>
@@ -32,42 +43,41 @@ const Comment = ({ comment }) => {
 
 
 
-export default function EventFeedback({ eventId, userId }) {
+export default function EventFeedback({ eventId, userId, isOrganizer }) {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState([]);
   const [attended, setAttended] = useState(false);
   const [error, setError] = useState("");
 
+  // Modal Reporte
+  const [showModal, setShowModal] = useState(false);
+  const [selectedComment, setSelectedComment] = useState(null);
+  const [reason, setReason] = useState("");
+
   useEffect(() => {
-    const fetchComments = async () => {
+    const loadData = async () => {
       try {
         const data = await eventService.getComments(eventId);
         setComments(data);
       } catch (err) {
         console.error("Error al cargar comentarios:", err);
       }
-    };
 
-    const checkAttendance = async () => {
       try {
         const data = await eventService.getParticipants(eventId);
-
-        const participants = data.results || data; // soporte para paginator o lista directa
-
+        const participants = data.results || data;
         const me = participants.find((p) => p.id === userId);
-
         setAttended(me?.attended === true);
       } catch (err) {
         console.error("Error al verificar asistencia:", err);
       }
     };
 
-    fetchComments();
-    checkAttendance();
+    loadData();
   }, [eventId, userId]);
 
-  // Enviar comentario principal
+  // Comentar
   const handleSubmitComment = async () => {
     if (!attended) {
       setError("Solo puedes comentar si asististe al evento.");
@@ -81,7 +91,6 @@ export default function EventFeedback({ eventId, userId }) {
       setComment("");
       setError("");
 
-      // refrescar lista
       const updated = await eventService.getComments(eventId);
       setComments(updated);
     } catch (err) {
@@ -90,7 +99,7 @@ export default function EventFeedback({ eventId, userId }) {
     }
   };
 
-  // Enviar rating
+  // Rating
   const handleSubmitRating = async () => {
     if (!attended) {
       setError("Solo puedes calificar si asististe al evento.");
@@ -107,47 +116,74 @@ export default function EventFeedback({ eventId, userId }) {
     }
   };
 
+  // Abrir modal reporte
+  const handleOpenReport = (comment) => {
+    setSelectedComment(comment);
+    setReason("");
+    setShowModal(true);
+  };
+
+  // Enviar reporte
+  const handleSubmitReport = async () => {
+    if (!reason.trim()) return;
+
+    try {
+      await eventService.reportComment(eventId, selectedComment.id, {
+        reason,
+      });
+
+      setShowModal(false);
+      setReason("");
+
+      const updated = await eventService.getComments(eventId);
+      setComments(updated);
+    } catch (err) {
+      console.error("Error al reportar comentario:", err);
+    }
+  };
+
   return (
     <section>
-      <h2 className="text-2xl font-bold mb-4">Tu opinión</h2>
+      {/* 🔥 Ocultar si es el organizador */}
+{!isOrganizer && (
+  <>
+    <h2 className="text-2xl font-bold mb-4">Tu opinión</h2>
 
-      {/* Comentarios */}
-      <div className="mb-6">
-        <textarea
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          placeholder="Escribe tu comentario..."
-          className="w-full border rounded p-2"
-        />
-        <button
-          onClick={handleSubmitComment}
-          className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Enviar comentario
-        </button>
-      </div>
+    {/* Comentarios */}
+    <div className="mb-6">
+      <textarea
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        placeholder="Escribe tu comentario..."
+        className="w-full border rounded p-2"
+      />
+      <button
+        onClick={handleSubmitComment}
+        className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        Enviar comentario
+      </button>
+    </div>
 
-      {/* Rating */}
-      <div className="mb-6">
-        <div className="flex gap-1 mb-2">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <button
-              key={star}
-              onClick={() => setRating(star)}
-              className={star <= rating ? "text-yellow-500" : "text-gray-300"}
-            >
-              ★
-            </button>
-          ))}
-        </div>
+    {/* Rating */}
+<div className="mb-6 bg-card-background border p-5 rounded-xl shadow-sm">
+  <h3 className="font-semibold mb-2 text-lg">Califica este evento</h3>
 
-        <button
-          onClick={handleSubmitRating}
-          className="mt-2 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-        >
-          Enviar calificación
-        </button>
-      </div>
+  <RatingStars rating={rating} onChange={setRating} />
+
+  <Button
+    onClick={handleSubmitRating}
+    className="mt-4 w-fit"
+    disabled={!rating}
+  >
+    Enviar calificación
+  </Button>
+</div>
+
+    {error && <p className="text-red-500 mt-2">{error}</p>}
+  </>
+)}
+
 
       {error && <p className="text-red-500 mt-2">{error}</p>}
 
@@ -158,9 +194,46 @@ export default function EventFeedback({ eventId, userId }) {
 
       <div>
         {comments.map((c) => (
-          <Comment key={c.id} comment={c} />
+          <Comment key={c.id} comment={c} onReport={handleOpenReport} />
         ))}
       </div>
+
+      {/* Modal Reporte */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card-background p-6 rounded-xl shadow-xl w-96">
+            <h3 className="text-lg font-semibold text-primary mb-3">Reportar comentario</h3>
+
+            <p className="text-sm mb-3">
+              Estás reportando el comentario de{" "}
+              <b>{selectedComment?.author}</b>
+            </p>
+
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Escribe la razón del reporte..."
+              className="w-full border rounded p-2 mb-4"
+            />
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-3 py-2 bg-background rounded cursor-pointer"
+              >
+                Cancelar
+              </button>
+
+              <button
+                onClick={handleSubmitReport}
+                className="px-4 py-2 bg-red-600 cursor-pointer text-white rounded hover:bg-red-700"
+              >
+                Enviar reporte
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

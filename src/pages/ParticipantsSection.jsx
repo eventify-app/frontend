@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { eventService } from "../api/services/eventService";
+import { BACKEND_URL } from "@/api/axiosInstance";
 
 export default function ParticipantsSection({ eventId, isOrganizer }) {
   const [participants, setParticipants] = useState([]);
@@ -53,7 +54,7 @@ export default function ParticipantsSection({ eventId, isOrganizer }) {
         {participants.map((p) => (
           <li key={p.id} className="flex items-center gap-4">
             <img
-              src={p.photo_url || "/default-avatar.png"}
+              src={ `${BACKEND_URL}/media/${p.profile_photo}` || "/assets/avatar-profile.png"}
               className="w-12 h-12 rounded-full object-cover border"
               alt="avatar"
             />

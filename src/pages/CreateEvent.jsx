@@ -96,9 +96,27 @@ const CreateEvent = () => {
     );
   };
 
+  // =============================
+  //   VALIDACIÓN DE HORAS (solo tiempo)
+  // =============================
+  const validateTimes = () => {
+    const start = formData.start_time;
+    const end = formData.end_time;
+
+    if (start && end) {
+      if (end <= start) {
+        setError("La hora de fin debe ser mayor que la hora de inicio.");
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!validateTimes()) return;
 
     if (selectedCategories.length === 0) {
       setError("Debes seleccionar al menos una categoría");
