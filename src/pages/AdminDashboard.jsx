@@ -3,6 +3,8 @@ import React, { useEffect, useMemo, useState, useRef } from "react";
 import adminService from "../api/services/adminService";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend } from "recharts";
 
+import { useNavigate } from "react-router-dom";
+
 /*
   AdminDashboard:
   - valida is_admin desde localStorage
@@ -38,6 +40,8 @@ export default function AdminDashboard() {
         user = null;
     }
     const isAdmin = user?.is_admin === true;
+
+    const navigate = useNavigate();
 
     // ---------- FILTERS ----------
     const [categories, setCategories] = useState([]);
@@ -82,14 +86,14 @@ export default function AdminDashboard() {
             loadReportedEvents({
                 search: eventsSearch,
                 ordering: eventsOrdering,
-                start_date: startDate,
-                end_date: endDate,
+                from_: startDate,   // <- aquí
+                to: endDate,        // <- y aquí
                 category: categoryFilter,
             });
         }, 450);
         return () => clearTimeout(id);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [eventsSearch, eventsOrdering, startDate, endDate, categoryFilter]);
+
 
     useEffect(() => {
         if (!isAdmin) return;
@@ -131,8 +135,8 @@ export default function AdminDashboard() {
         setAnalyticsError(null);
         try {
             const params = {};
-            if (startDate) params.start_date = startDate;
-            if (endDate) params.end_date = endDate;
+            if (startDate) params.from_ = startDate; // <- aquí
+            if (endDate) params.to = endDate;        // <- y aquí
             if (categoryFilter) params.category = categoryFilter;
 
             const [catRes, creatorsRes, eventsRes] = await Promise.all([
@@ -142,9 +146,23 @@ export default function AdminDashboard() {
             ]);
 
             // normalize possible response shapes
-            setTopCategories(Array.isArray(catRes) ? catRes : (catRes?.data ?? catRes?.results ?? catRes));
+            setTopCategories(
+            (Array.isArray(catRes) ? catRes : (catRes?.data ?? catRes?.results ?? catRes))
+                .map(c => ({
+                id: c.category_id,
+                name: c.category_name,
+                count: c.enrollments, // o c.events / c.attendance según quieras mostrar
+                }))
+            );
             setTopCreators(Array.isArray(creatorsRes) ? creatorsRes : (creatorsRes?.data ?? creatorsRes?.results ?? creatorsRes));
-            setTopEvents(Array.isArray(eventsRes) ? eventsRes : (eventsRes?.data ?? eventsRes?.results ?? eventsRes));
+            setTopEvents(
+            (Array.isArray(eventsRes) ? eventsRes : (eventsRes?.data ?? eventsRes?.results ?? eventsRes))
+                .map(item => ({
+                id: item.event.id,
+                title: item.event.title,
+                count: item.enrollments, // o attendance según quieras mostrar
+                }))
+            );
         } catch (err) {
             console.error("loadAnalytics error:", err);
             setAnalyticsError("No se pudieron cargar los datos analíticos. Intenta nuevamente.");
@@ -157,46 +175,47 @@ export default function AdminDashboard() {
     }
 
     async function loadReportedEvents({
-        url = null,
-        search = "",
-        ordering = "-latest_report_date",
-        page = null,
-        start_date = "",
-        end_date = "",
-        category = "",
-    } = {}) {
-        setEventsLoading(true);
-        setErrorMessage(null);
-        try {
-            let data;
-            if (url) {
-                data = await adminService.fetchReportedEvents(url);
-            } else {
-                const params = {};
-                if (search) params.search = search;
-                if (ordering) params.ordering = ordering;
-                if (page) params.page = page;
-                if (start_date) params.start_date = start_date;
-                if (end_date) params.end_date = end_date;
-                if (category) params.category = category;
-                data = await adminService.fetchReportedEvents(params);
-            }
-
-            setReportedEvents(data.results ?? []);
-            setEventsCount(data.count ?? 0);
-            setEventsNext(data.next ?? null);
-            setEventsPrev(data.previous ?? null);
-        } catch (err) {
-            console.error("loadReportedEvents:", err);
-            setErrorMessage("No se pudieron cargar los eventos reportados.");
-            setReportedEvents([]);
-            setEventsCount(0);
-            setEventsNext(null);
-            setEventsPrev(null);
-        } finally {
-            setEventsLoading(false);
+    url = null,
+    search = "",
+    ordering = "-latest_report_date",
+    page = null,
+    from_ = "",
+    to = "",
+    category = "",
+} = {}) {
+    setEventsLoading(true);
+    setErrorMessage(null);
+    try {
+        let data;
+        if (url) {
+            data = await adminService.fetchReportedEvents(url);
+        } else {
+            const params = {};
+            if (search) params.search = search;
+            if (ordering) params.ordering = ordering;
+            if (page) params.page = page;
+            if (from_) params.from_ = from_;   // <- aquí
+            if (to) params.to = to;           // <- y aquí
+            if (category) params.category = category;
+            data = await adminService.fetchReportedEvents(params);
         }
+
+        setReportedEvents(data.results ?? []);
+        setEventsCount(data.count ?? 0);
+        setEventsNext(data.next ?? null);
+        setEventsPrev(data.previous ?? null);
+    } catch (err) {
+        console.error("loadReportedEvents:", err);
+        setErrorMessage("No se pudieron cargar los eventos reportados.");
+        setReportedEvents([]);
+        setEventsCount(0);
+        setEventsNext(null);
+        setEventsPrev(null);
+    } finally {
+        setEventsLoading(false);
     }
+}
+
 
     async function loadReportedComments({
         url = null,
@@ -372,11 +391,15 @@ export default function AdminDashboard() {
 
                 <div className="flex items-end">
                     <button
-                        onClick={() => { loadAnalytics(); loadReportedEvents(); }}
+                        onClick={() => { 
+                            loadAnalytics(); 
+                            loadReportedEvents({ from_: startDate, to: endDate, category: categoryFilter });
+                        }}
                         className="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
                     >
                         Aplicar filtros
                     </button>
+
                 </div>
 
             </section>
@@ -401,23 +424,23 @@ export default function AdminDashboard() {
 
             {/* CHARTS */}
             <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white p-5 rounded-lg shadow min-h-[260px]">
+                 <div className="bg-white p-5 rounded-lg shadow min-h-[260px]">
                     <h3 className="font-semibold mb-3">Top Categorías</h3>
                     <div className="w-full h-[220px]">
                         {analyticsLoading ? <p>Cargando...</p> :
-                            (topCategories && topCategories.length > 0) ? (
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={topCategories}>
-                                        <XAxis dataKey="type" />
-                                        <YAxis />
-                                        <Tooltip />
-                                        <Bar dataKey="count" fill={COLORS[0]} />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            ) : <p className="text-sm text-gray-500">Sin datos</p>
+                        (topCategories && topCategories.length > 0) ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={topCategories}>
+                                <XAxis dataKey="name" />
+                                <YAxis />
+                                <Tooltip />
+                                <Bar dataKey="count" fill={COLORS[0]} />
+                            </BarChart>
+                            </ResponsiveContainer>
+                        ) : <p className="text-sm text-gray-500">Sin datos</p>
                         }
                     </div>
-                </div>
+                    </div>
 
                 <div className="bg-white p-5 rounded-lg shadow min-h-[260px]">
                     <h3 className="font-semibold mb-3">Top Eventos (por inscripciones)</h3>
@@ -450,16 +473,20 @@ export default function AdminDashboard() {
                             <thead>
                                 <tr className="text-sm text-gray-600">
                                     <th className="py-2 pr-4">Evento</th>
-                                    <th className="py-2">Métrica</th>
+                                    <th className="py-2">Inscritos</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {topEvents?.map((e, i) => (
-                                    <tr key={i} className="border-t">
-                                        <td className="py-2 pr-4">{e.title ?? e.name}</td>
-                                        <td className="py-2">{e.count ?? "-"}</td>
-                                    </tr>
-                                ))}
+                            {topEvents?.map((e, i) => (
+                                <tr
+                                key={i}
+                                className="border-t cursor-pointer hover:bg-gray-50 transition"
+                                onClick={() => navigate(`/event/${e.id}`)}
+                                >
+                                <td className="py-2 pr-4">{e.title}</td>
+                                <td className="py-2">{e.count}</td>
+                                </tr>
+                            ))}
                             </tbody>
                         </table>
                     </div>
@@ -472,7 +499,7 @@ export default function AdminDashboard() {
                             <thead>
                                 <tr className="text-sm text-gray-600">
                                     <th className="py-2 pr-4">Categoría</th>
-                                    <th className="py-2">Métrica</th>
+                                    <th className="py-2">Incritos</th>
                                 </tr>
                             </thead>
                             <tbody>
