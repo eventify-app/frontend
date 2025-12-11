@@ -17,6 +17,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import CalendarioEventos from "./pages/Calendario";
 import ProfilePage from "./pages/ProfilePage";
 import EditAccount from "./pages/EditAccount";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
   useEffect(() => {
@@ -82,6 +83,8 @@ function App() {
 
           {/* Mis eventos (solo visible al usuario logueado) */}
           <Route path="/my-events" element={<MyEvents />} />
+
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
         </Routes>
       </BrowserRouter>
     </>
