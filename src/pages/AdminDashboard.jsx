@@ -696,7 +696,7 @@ export default function AdminDashboard() {
                                                 onClick={() =>
                                                     setOpenCommentRow(isOpen ? null : idx)
                                                 }
-                                                className="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
+                                                className="px-3 py-1 text-sm bg-background rounded hover:bg-card-background"
                                             >
                                                 {isOpen ? "Ocultar" : "Ver motivos"}
                                             </button>

@@ -386,7 +386,7 @@ const EventDetail = () => {
           </div>
 
           {/* Feedback (si el evento finalizó) */}
-          {true && (
+          {is_finished && (
             <div className="mt-6 md:row-start-5 lg:mt-0">
               <EventFeedback eventId={numericId} userId={user?.id} isOrganizer={isOrganizer} />
             </div>
