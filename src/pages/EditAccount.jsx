@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch"; // <<--- asegúrate que existe
 
 const EditAccount = () => {
   const navigate = useNavigate();
@@ -46,9 +47,7 @@ const EditAccount = () => {
     if (!formData.date_of_birth)
       errors.date_of_birth = "La fecha de nacimiento es obligatoria";
 
-    if (!formData.phone.trim()) {
-      errors.phone = "El teléfono es obligatorio";
-    } else if (!/^[0-9+\-\s()]{6,20}$/.test(formData.phone)) {
+    if (formData.phone.trim() && !/^[0-9+\-\s()]{6,20}$/.test(formData.phone)) {
       errors.phone = "Formato de teléfono inválido";
     }
 
@@ -85,7 +84,7 @@ const EditAccount = () => {
     const { id, value } = e.target;
 
     setFormData((prev) => ({ ...prev, [id]: value }));
-    setValidationErrors((prev) => ({ ...prev, [id]: "" })); // limpiar error al escribir
+    setValidationErrors((prev) => ({ ...prev, [id]: "" }));
   };
 
   // === SUBMIT PERFIL ====================================
@@ -109,7 +108,7 @@ const EditAccount = () => {
     }
   };
 
-  // === SOLICITAR CAMBIO DE EMAIL ========================
+  // === EMAIL CHANGE =======================================
   const handleRequestEmailChange = async () => {
     setEmailError("");
     setEmailLoading(true);
@@ -130,7 +129,6 @@ const EditAccount = () => {
     }
   };
 
-  // === VERIFICAR EMAIL ===================================
   const handleVerifyEmail = async () => {
     setVerifyError("");
     setVerifyLoading(true);
@@ -152,6 +150,57 @@ const EditAccount = () => {
     }
   };
 
+  // ======================================================
+  // === PREFERENCIAS DE NOTIFICACIÓN =====================
+  // ======================================================
+  const [notifPrefs, setNotifPrefs] = useState({
+    email_enabled: false,
+    hours_before: 24,
+  });
+
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [notifError, setNotifError] = useState("");
+  const [notifSaved, setNotifSaved] = useState(false);
+
+  // ==== Cargar preferencias ====
+  useEffect(() => {
+    const loadPrefs = async () => {
+      try {
+        const res = await userService.getNotificationPreferences();
+        setNotifPrefs({
+          email_enabled: res.email_enabled,
+          hours_before: res.hours_before,
+        });
+      } catch (err) {
+        console.error("Error loading notif prefs", err);
+      }
+    };
+    loadPrefs();
+  }, []);
+
+  const handleSavePrefs = async () => {
+    setNotifError("");
+    setNotifSaved(false);
+    setNotifLoading(true);
+
+    if (notifPrefs.hours_before < 0) {
+      setNotifError("Las horas no pueden ser negativas");
+      setNotifLoading(false);
+      return;
+    }
+
+    try {
+      await userService.updateNotificationPreferences(notifPrefs);
+      setNotifSaved(true);
+    } catch (err) {
+      setNotifError(
+        err?.response?.data?.detail || "No se pudieron guardar las preferencias"
+      );
+    } finally {
+      setNotifLoading(false);
+    }
+  };
+
   return (
     <Main>
       <div className="max-w-3xl mx-auto w-full">
@@ -162,12 +211,10 @@ const EditAccount = () => {
         {/* ================================ */}
         <Card className="p-8 shadow-md space-y-6">
           <form onSubmit={handleSubmit} className="space-y-6">
-
             {/* USERNAME */}
             <div className="flex flex-col gap-1">
               <Label htmlFor="username" className="font-semibold">Nombre de usuario</Label>
               <Input id="username" value={formData.username} onChange={handleChange} />
-
               {validationErrors.username && (
                 <p className="text-red-600 text-sm">{validationErrors.username}</p>
               )}
@@ -257,6 +304,67 @@ const EditAccount = () => {
               </Button>
             </>
           )}
+        </Card>
+
+        {/* ===================================================== */}
+        {/* === PREFERENCIAS DE NOTIFICACIONES =================== */}
+        {/* ===================================================== */}
+        <Card className="mt-10 p-8 shadow-md space-y-6">
+          <h2 className="text-xl font-bold">Preferencias de notificaciones</h2>
+
+          {/* Habilitar email */}
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="font-semibold">Notificaciones por email</Label>
+              <p className="text-sm text-muted-foreground">
+                Recibir recordatorios y avisos en tu correo electrónico
+              </p>
+            </div>
+
+            <Switch
+              checked={notifPrefs.email_enabled}
+              onCheckedChange={(v) =>
+                setNotifPrefs((prev) => ({ ...prev, email_enabled: v }))
+              }
+            />
+          </div>
+
+          {/* Horas */}
+          <div className="flex flex-col gap-1">
+            <Label className="font-semibold">Horas antes para recordatorios</Label>
+            <Input
+              type="number"
+              min="0"
+              value={notifPrefs.hours_before}
+              onChange={(e) =>
+                setNotifPrefs((prev) => ({
+                  ...prev,
+                  hours_before: Number(e.target.value),
+                }))
+              }
+            />
+            <p className="text-sm text-muted-foreground">
+              Ejemplo: 24 = un día antes del evento
+            </p>
+          </div>
+
+          {notifError && (
+            <p className="text-red-600 text-sm text-center">{notifError}</p>
+          )}
+
+          {notifSaved && (
+            <p className="text-green-600 text-sm text-center">
+              Preferencias guardadas correctamente
+            </p>
+          )}
+
+          <Button
+            onClick={handleSavePrefs}
+            disabled={notifLoading}
+            className="w-full"
+          >
+            {notifLoading ? "Guardando..." : "Guardar preferencias"}
+          </Button>
         </Card>
       </div>
     </Main>

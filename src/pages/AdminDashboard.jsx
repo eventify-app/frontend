@@ -2,18 +2,7 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import adminService from "../api/services/adminService";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend } from "recharts";
-
 import { useNavigate } from "react-router-dom";
-
-/*
-  AdminDashboard:
-  - valida is_admin desde localStorage
-  - filtros: date range + category
-  - KPIs, charts, top N tables
-  - reported events & comments (search, ordering, pagination)
-  - actions: disable / restore event/comment
-  - export CSV
-*/
 
 const COLORS = ["#4F46E5", "#06B6D4", "#F59E0B", "#EF4444", "#10B981", "#7C3AED"];
 
@@ -43,11 +32,17 @@ export default function AdminDashboard() {
 
     const navigate = useNavigate();
 
+    // ---------- MENU STATE ----------
+    const [activeSection, setActiveSection] = useState("analiticas"); // "analiticas", "eventos", "comentarios"
+
     // ---------- FILTERS ----------
     const [categories, setCategories] = useState([]);
     const [categoryFilter, setCategoryFilter] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
+
+    const [openEventRow, setOpenEventRow] = useState(null);
+    const [openCommentRow, setOpenCommentRow] = useState(null);
 
     // ---------- ANALYTICS ----------
     const [topCategories, setTopCategories] = useState([]);
@@ -83,26 +78,28 @@ export default function AdminDashboard() {
     useEffect(() => {
         if (!isAdmin) return;
         const id = setTimeout(() => {
-            loadReportedEvents({
-                search: eventsSearch,
-                ordering: eventsOrdering,
-                from_: startDate,   // <- aquí
-                to: endDate,        // <- y aquí
-                category: categoryFilter,
-            });
+            if (activeSection === "eventos") {
+                loadReportedEvents({
+                    search: eventsSearch,
+                    ordering: eventsOrdering,
+                    from_: startDate,
+                    to: endDate,
+                    category: categoryFilter,
+                });
+            }
         }, 450);
         return () => clearTimeout(id);
-    }, [eventsSearch, eventsOrdering, startDate, endDate, categoryFilter]);
-
+    }, [eventsSearch, eventsOrdering, startDate, endDate, categoryFilter, activeSection]);
 
     useEffect(() => {
         if (!isAdmin) return;
         const id = setTimeout(() => {
-            loadReportedComments({ search: commentsSearch, ordering: commentsOrdering });
+            if (activeSection === "comentarios") {
+                loadReportedComments({ search: commentsSearch, ordering: commentsOrdering });
+            }
         }, 450);
         return () => clearTimeout(id);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [commentsSearch, commentsOrdering]);
+    }, [commentsSearch, commentsOrdering, activeSection]);
 
     // ---------- INITIAL LOAD ----------
     useEffect(() => {
@@ -115,14 +112,12 @@ export default function AdminDashboard() {
                 loadReportedComments(),
             ]);
         })();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAdmin]);
 
     /* ---------- load functions ---------- */
     async function loadCategories() {
         try {
             const data = await adminService.getCategories();
-            // adminService.getCategories returns array (we implemented that way)
             setCategories(data);
         } catch (err) {
             console.error("loadCategories:", err);
@@ -135,8 +130,8 @@ export default function AdminDashboard() {
         setAnalyticsError(null);
         try {
             const params = {};
-            if (startDate) params.from_ = startDate; // <- aquí
-            if (endDate) params.to = endDate;        // <- y aquí
+            if (startDate) params.from_ = startDate;
+            if (endDate) params.to = endDate;
             if (categoryFilter) params.category = categoryFilter;
 
             const [catRes, creatorsRes, eventsRes] = await Promise.all([
@@ -145,23 +140,22 @@ export default function AdminDashboard() {
                 adminService.getTopEvents(params),
             ]);
 
-            // normalize possible response shapes
             setTopCategories(
-            (Array.isArray(catRes) ? catRes : (catRes?.data ?? catRes?.results ?? catRes))
-                .map(c => ({
-                id: c.category_id,
-                name: c.category_name,
-                count: c.enrollments, // o c.events / c.attendance según quieras mostrar
-                }))
+                (Array.isArray(catRes) ? catRes : (catRes?.data ?? catRes?.results ?? catRes))
+                    .map(c => ({
+                        id: c.category_id,
+                        name: c.category_name,
+                        count: c.enrollments,
+                    }))
             );
             setTopCreators(Array.isArray(creatorsRes) ? creatorsRes : (creatorsRes?.data ?? creatorsRes?.results ?? creatorsRes));
             setTopEvents(
-            (Array.isArray(eventsRes) ? eventsRes : (eventsRes?.data ?? eventsRes?.results ?? eventsRes))
-                .map(item => ({
-                id: item.event.id,
-                title: item.event.title,
-                count: item.enrollments, // o attendance según quieras mostrar
-                }))
+                (Array.isArray(eventsRes) ? eventsRes : (eventsRes?.data ?? eventsRes?.results ?? eventsRes))
+                    .map(item => ({
+                        id: item.event.id,
+                        title: item.event.title,
+                        count: item.enrollments,
+                    }))
             );
         } catch (err) {
             console.error("loadAnalytics error:", err);
@@ -175,47 +169,46 @@ export default function AdminDashboard() {
     }
 
     async function loadReportedEvents({
-    url = null,
-    search = "",
-    ordering = "-latest_report_date",
-    page = null,
-    from_ = "",
-    to = "",
-    category = "",
-} = {}) {
-    setEventsLoading(true);
-    setErrorMessage(null);
-    try {
-        let data;
-        if (url) {
-            data = await adminService.fetchReportedEvents(url);
-        } else {
-            const params = {};
-            if (search) params.search = search;
-            if (ordering) params.ordering = ordering;
-            if (page) params.page = page;
-            if (from_) params.from_ = from_;   // <- aquí
-            if (to) params.to = to;           // <- y aquí
-            if (category) params.category = category;
-            data = await adminService.fetchReportedEvents(params);
+        url = null,
+        search = "",
+        ordering = "-latest_report_date",
+        page = null,
+        from_ = "",
+        to = "",
+        category = "",
+    } = {}) {
+        setEventsLoading(true);
+        setErrorMessage(null);
+        try {
+            let data;
+            if (url) {
+                data = await adminService.fetchReportedEvents(url);
+            } else {
+                const params = {};
+                if (search) params.search = search;
+                if (ordering) params.ordering = ordering;
+                if (page) params.page = page;
+                if (from_) params.from_ = from_;
+                if (to) params.to = to;
+                if (category) params.category = category;
+                data = await adminService.fetchReportedEvents(params);
+            }
+
+            setReportedEvents(data.results ?? []);
+            setEventsCount(data.count ?? 0);
+            setEventsNext(data.next ?? null);
+            setEventsPrev(data.previous ?? null);
+        } catch (err) {
+            console.error("loadReportedEvents:", err);
+            setErrorMessage("No se pudieron cargar los eventos reportados.");
+            setReportedEvents([]);
+            setEventsCount(0);
+            setEventsNext(null);
+            setEventsPrev(null);
+        } finally {
+            setEventsLoading(false);
         }
-
-        setReportedEvents(data.results ?? []);
-        setEventsCount(data.count ?? 0);
-        setEventsNext(data.next ?? null);
-        setEventsPrev(data.previous ?? null);
-    } catch (err) {
-        console.error("loadReportedEvents:", err);
-        setErrorMessage("No se pudieron cargar los eventos reportados.");
-        setReportedEvents([]);
-        setEventsCount(0);
-        setEventsNext(null);
-        setEventsPrev(null);
-    } finally {
-        setEventsLoading(false);
     }
-}
-
 
     async function loadReportedComments({
         url = null,
@@ -264,8 +257,8 @@ export default function AdminDashboard() {
                 await loadReportedEvents({
                     search: eventsSearch,
                     ordering: eventsOrdering,
-                    start_date: startDate,
-                    end_date: endDate,
+                    from_: startDate,
+                    to: endDate,
                     category: categoryFilter,
                 });
             } else {
@@ -351,17 +344,8 @@ export default function AdminDashboard() {
         );
     }
 
-    return (
-        <div className="lg:px-12 pt-24 w-full max-w-7xl mx-auto px-4 py-6 md:px-8  space-y-8">
-
-            {/* HEADER */}
-            <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <h1 className="text-2xl font-bold leading-tight">
-                    Panel Administrativo — Analytics & Moderación
-                </h1>
-            </header>
-
-
+    const renderAnalyticsSection = () => (
+        <>
             {/* FILTERS */}
             <section className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-card-background p-4 rounded-lg shadow">
                 <div className="flex flex-col">
@@ -393,15 +377,15 @@ export default function AdminDashboard() {
                     <button
                         onClick={() => { 
                             loadAnalytics(); 
-                            loadReportedEvents({ from_: startDate, to: endDate, category: categoryFilter });
+                            if (activeSection === "eventos") {
+                                loadReportedEvents({ from_: startDate, to: endDate, category: categoryFilter });
+                            }
                         }}
                         className="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
                     >
                         Aplicar filtros
                     </button>
-
                 </div>
-
             </section>
 
             {/* KPI CARDS */}
@@ -424,7 +408,7 @@ export default function AdminDashboard() {
 
             {/* CHARTS */}
             <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                 <div className="bg-card-background p-5 rounded-lg shadow min-h-[260px]">
+                <div className="bg-card-background p-5 rounded-lg shadow min-h-[260px]">
                     <h3 className="font-semibold mb-3">Top Categorías</h3>
                     <div className="w-full h-[220px]">
                         {analyticsLoading ? <p>Cargando...</p> :
@@ -440,7 +424,7 @@ export default function AdminDashboard() {
                         ) : <p className="text-sm text-gray-500">Sin datos</p>
                         }
                     </div>
-                    </div>
+                </div>
 
                 <div className="bg-card-background p-5 rounded-lg shadow min-h-[260px]">
                     <h3 className="font-semibold mb-3">Top Eventos (por inscripciones)</h3>
@@ -514,110 +498,328 @@ export default function AdminDashboard() {
                     </div>
                 </div>
             </section>
+        </>
+    );
 
-            {/* -------- REPORTED EVENTS -------- */}
-            <section className="bg-card-background p-5 rounded-lg shadow space-y-4">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                    <h3 className="text-lg font-semibold">Eventos reportados</h3>
-
-                    <div className="flex flex-wrap gap-2 items-center">
-                        <input
-                            placeholder="Buscar..."
-                            value={eventsSearch}
-                            onChange={(e) => setEventsSearch(e.target.value)}
-                            className="px-3 py-2 border rounded w-full md:w-auto"
-                        />
-                    </div>
+    const renderEventsSection = () => (
+        <section className="bg-card-background p-5 rounded-lg shadow space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <h3 className="text-xl font-semibold">Eventos reportados</h3>
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        placeholder="Buscar eventos..."
+                        value={eventsSearch}
+                        onChange={(e) => setEventsSearch(e.target.value)}
+                        className="border rounded px-3 py-2 text-sm"
+                    />
+                    <select
+                        value={eventsOrdering}
+                        onChange={(e) => setEventsOrdering(e.target.value)}
+                        className="border rounded px-3 py-2 text-sm"
+                    >
+                        <option value="-latest_report_date">Más recientes primero</option>
+                        <option value="latest_report_date">Más antiguos primero</option>
+                        <option value="-report_count">Más reportes</option>
+                        <option value="report_count">Menos reportes</option>
+                    </select>
                 </div>
+            </div>
 
-                <div className="space-y-3 max-h-[360px] overflow-y-auto pr-2">
-                    {eventsLoading ? <p>Cargando...</p> : (eventsTableRows.length === 0 ? <p className="text-sm text-gray-500">No hay eventos reportados.</p> :
-                        eventsTableRows.map(row => (
-                            <div key={row.id}
-                                className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-4 border rounded-lg bg-background"
-                            >
-                                <div className="flex-1 space-y-1">
-                                    <div className="font-semibold">{row.title}</div>
-                                    <div className="text-sm text-gray-600">Lugar: {row.place}</div>
-                                    <div className="text-sm text-gray-500">Último reporte: {row.latest_report_date}</div>
-                                </div>
+            <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                    <thead>
+                        <tr className="text-sm text-gray-600 border-b">
+                            <th className="py-2 pr-4">Evento</th>
+                            <th className="py-2 pr-4">Lugar</th>
+                            <th className="py-2 pr-4"># Reportes</th>
+                            <th className="py-2 pr-4">Último reporte</th>
+                            <th className="py-2 pr-4">Acciones</th>
+                        </tr>
+                    </thead>
 
-                                <div className="flex items-center gap-3">
-                                    <span className="text-sm">Reportes: <strong>{row.report_count}</strong></span>
+                    <tbody>
+                        {reportedEvents.map((item, idx) => {
+                            const isOpen = openEventRow === idx;
 
-                                    {row.raw.event?.is_active ? (
-                                        <button
-                                            onClick={() => handleDisableEvent(row.raw)}
-                                            className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
-                                        >
-                                            Deshabilitar
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={() => handleRestoreEvent(row.raw)}
-                                            className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition"
-                                        >
-                                            Restaurar
-                                        </button>
+                            return (
+                                <React.Fragment key={idx}>
+                                    <tr className="border-t hover:bg-primary transition">
+                                        <td className="py-2">{item.event?.title}</td>
+                                        <td className="py-2">{item.event?.place}</td>
+                                        <td className="py-2">{item.report_count}</td>
+                                        <td className="py-2">
+                                            {new Date(item.latest_report_date).toLocaleString()}
+                                        </td>
+
+                                        <td className="py-2 flex gap-2">
+                                            <button
+                                                onClick={() =>
+                                                    setOpenEventRow(isOpen ? null : idx)
+                                                }
+                                                className="px-3 py-1 text-sm bg-background rounded hover:bg-background/70"
+                                            >
+                                                {isOpen ? "Ocultar" : "Ver detalles"}
+                                            </button>
+
+                                            {item.event?.is_active ? (
+                                                <button
+                                                    onClick={() => handleDisableEvent(item)}
+                                                    className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                                                >
+                                                    Inhabilitar
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleRestoreEvent(item)}
+                                                    className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                                                >
+                                                    Restaurar
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+
+                                    {isOpen && (
+                                        <tr className="bg-background">
+                                            <td colSpan="5" className="p-4">
+                                                <h4 className="font-medium mb-2">
+                                                    Motivos del reporte
+                                                </h4>
+
+                                                {item.reports?.map((rep, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className="border rounded p-3 mb-3 bg-background"
+                                                    >
+                                                        <p className="text-sm">
+                                                            <span className="font-semibold">Reportado por:</span>{" "}
+                                                            {rep.reported_by?.username}
+                                                        </p>
+
+                                                        <p className="text-sm mt-1">
+                                                            <span className="font-semibold">Razón:</span>{" "}
+                                                            {rep.reason}
+                                                        </p>
+
+                                                        <p className="text-xs text-gray-500 mt-1">
+                                                            {new Date(rep.created_at).toLocaleString()}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </td>
+                                        </tr>
                                     )}
-                                </div>
+                                </React.Fragment>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
 
-                            </div>
-                        ))
-                    )}
+            {/* PAGINACIÓN */}
+            <div className="flex justify-between pt-4">
+                <button
+                    disabled={!eventsPrev}
+                    onClick={() => loadReportedEvents({ url: eventsPrev })}
+                    className="px-3 py-1 border rounded disabled:opacity-50"
+                >
+                    Anterior
+                </button>
+                <span className="text-sm text-gray-600 self-center">
+                    Total: {eventsCount} eventos
+                </span>
+                <button
+                    disabled={!eventsNext}
+                    onClick={() => loadReportedEvents({ url: eventsNext })}
+                    className="px-3 py-1 border rounded disabled:opacity-50"
+                >
+                    Siguiente
+                </button>
+            </div>
+        </section>
+    );
+
+    const renderCommentsSection = () => (
+        <section className="bg-card-background p-5 rounded-lg shadow space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <h3 className="text-xl font-semibold">Comentarios reportados</h3>
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        placeholder="Buscar comentarios..."
+                        value={commentsSearch}
+                        onChange={(e) => setCommentsSearch(e.target.value)}
+                        className="border rounded px-3 py-2 text-sm"
+                    />
+                    <select
+                        value={commentsOrdering}
+                        onChange={(e) => setCommentsOrdering(e.target.value)}
+                        className="border rounded px-3 py-2 text-sm"
+                    >
+                        <option value="-latest_report_date">Más recientes primero</option>
+                        <option value="latest_report_date">Más antiguos primero</option>
+                        <option value="-report_count">Más reportes</option>
+                        <option value="report_count">Menos reportes</option>
+                    </select>
                 </div>
+            </div>
 
-                <div className="flex justify-between items-center mt-3">
-                    <span className="text-sm text-gray-600">Mostrando {reportedEvents.length} de {eventsCount}</span>
+            <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                    <thead>
+                        <tr className="text-sm text-gray-600 border-b">
+                            <th className="py-2 pr-4">Comentario</th>
+                            <th className="py-2 pr-4">Autor</th>
+                            <th className="py-2 pr-4"># Reportes</th>
+                            <th className="py-2 pr-4">Último reporte</th>
+                            <th className="py-2 pr-4">Acciones</th>
+                        </tr>
+                    </thead>
 
-                    <div className="flex gap-2">
-                        <button disabled={!eventsPrev} onClick={() => loadReportedEvents({ url: eventsPrev })} className={`px-3 py-1 rounded ${eventsPrev ? "bg-card-background border hover:bg-gray-50" : "bg-gray-100 text-gray-400"}`}>Anterior</button>
-                        <button disabled={!eventsNext} onClick={() => loadReportedEvents({ url: eventsNext })} className={`px-3 py-1 rounded ${eventsNext ? "bg-card-background border hover:bg-gray-50" : "bg-gray-100 text-gray-400"}`}>Siguiente</button>
-                    </div>
-                </div>
+                    <tbody>
+                        {reportedComments.map((item, idx) => {
+                            const isOpen = openCommentRow === idx;
 
-            </section>
+                            return (
+                                <React.Fragment key={idx}>
+                                    <tr className="border-t hover:bg-primary transition">
+                                        <td className="py-2">{item.comment?.content}</td>
+                                        <td className="py-2">{item.comment?.author}</td>
+                                        <td className="py-2">{item.report_count}</td>
+                                        <td className="py-2">
+                                            {new Date(item.latest_report_date).toLocaleString()}
+                                        </td>
 
-            {/* -------- REPORTED COMMENTS -------- */}
-            <section className="bg-card-background p-5 rounded-lg shadow space-y-4">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                    <h3 className="text-lg font-semibold">Comentarios reportados</h3>
+                                        <td className="py-2 flex gap-2">
+                                            <button
+                                                onClick={() =>
+                                                    setOpenCommentRow(isOpen ? null : idx)
+                                                }
+                                                className="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
+                                            >
+                                                {isOpen ? "Ocultar" : "Ver motivos"}
+                                            </button>
 
-                    <div className="flex flex-wrap gap-2 items-center">
-                        <input placeholder="Buscar..." value={commentsSearch} onChange={(e) => setCommentsSearch(e.target.value)} className="px-3 py-2 border rounded w-full md:w-auto" />
-                    </div>
-                </div>
+                                            {item.comment?.is_active ? (
+                                                <button
+                                                    onClick={() => handleDisableComment(item)}
+                                                    className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                                                >
+                                                    Inhabilitar
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleRestoreComment(item)}
+                                                    className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                                                >
+                                                    Restaurar
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
 
-                <div className="space-y-3 max-h-[360px] overflow-y-auto pr-2">
-                    {commentsLoading ? <p>Cargando...</p> : (commentsTableRows.length === 0 ? <p className="text-sm text-gray-500">No hay comentarios reportados.</p> :
-                        commentsTableRows.map(row => (
-                            <div key={row.id} className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-4 border rounded-lg bg-background">
-                                <div className="flex-1 space-y-1 max-w-3xl">
-                                    <div className="font-medium">{row.content}</div>
-                                    <div className="text-sm text-gray-600">Autor: {row.author}</div>
-                                    <div className="text-sm text-gray-500">Último reporte: {row.latest_report_date}</div>
-                                </div>
+                                    {isOpen && (
+                                        <tr className="bg-gray-50">
+                                            <td colSpan="5" className="p-4">
+                                                <h4 className="font-medium text-gray-700 mb-2">
+                                                    Motivos del reporte
+                                                </h4>
 
-                                <div className="flex items-center gap-3">
-                                    <span className="text-sm">Reportes: <strong>{row.report_count}</strong></span>
-                                    <button onClick={() => handleDisableComment(row.raw)} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition">Deshabilitar</button>
-                                    <button onClick={() => handleRestoreComment(row.raw)} className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition">Restaurar</button>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
+                                                {item.reports?.map((rep, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className="border rounded p-3 mb-3 bg-white"
+                                                    >
+                                                        <p className="text-sm">
+                                                            <span className="font-semibold">Reportado por:</span>{" "}
+                                                            {rep.reported_by?.username}
+                                                        </p>
 
-                <div className="flex justify-between items-center mt-3">
-                    <span className="text-sm text-gray-600">Mostrando {reportedComments.length} de {commentsCount}</span>
+                                                        <p className="text-sm mt-1">
+                                                            <span className="font-semibold">Razón:</span>{" "}
+                                                            {rep.reason}
+                                                        </p>
 
-                    <div className="flex gap-2">
-                        <button disabled={!commentsPrev} onClick={() => loadReportedComments({ url: commentsPrev })} className={`px-3 py-1 rounded ${commentsPrev ? "bg-card-background border hover:bg-gray-50" : "bg-gray-100 text-gray-400"}`}>Anterior</button>
-                        <button disabled={!commentsNext} onClick={() => loadReportedComments({ url: commentsNext })} className={`px-3 py-1 rounded ${commentsNext ? "bg-card-background border hover:bg-gray-50" : "bg-gray-100 text-gray-400"}`}>Siguiente</button>
-                    </div>
-                </div>
+                                                        <p className="text-xs text-gray-500 mt-1">
+                                                            {new Date(rep.created_at).toLocaleString()}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </td>
+                                        </tr>
+                                    )}
+                                </React.Fragment>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
 
-            </section>
+            {/* PAGINACIÓN */}
+            <div className="flex justify-between pt-4">
+                <button
+                    disabled={!commentsPrev}
+                    onClick={() => loadReportedComments({ url: commentsPrev })}
+                    className="px-3 py-1 border rounded disabled:opacity-50"
+                >
+                    Anterior
+                </button>
+                <span className="text-sm text-gray-600 self-center">
+                    Total: {commentsCount} comentarios
+                </span>
+                <button
+                    disabled={!commentsNext}
+                    onClick={() => loadReportedComments({ url: commentsNext })}
+                    className="px-3 py-1 border rounded disabled:opacity-50"
+                >
+                    Siguiente
+                </button>
+            </div>
+        </section>
+    );
+
+    return (
+        <div className="lg:px-12 pt-24 w-full max-w-7xl mx-auto px-4 py-6 md:px-8 space-y-8">
+            {/* HEADER */}
+            <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <h1 className="text-2xl font-bold leading-tight">
+                    Panel Administrativo
+                </h1>
+            </header>
+
+            {/* MENU DE NAVEGACIÓN */}
+            <nav className="flex flex-wrap gap-2 border-b pb-4">
+                <button
+                    onClick={() => setActiveSection("analiticas")}
+                    className={`px-4 py-2 rounded-md transition ${activeSection === "analiticas" 
+                        ? "bg-indigo-600 text-white" 
+                        : "bg-background hover:bg-primary"}`}
+                >
+                    Analíticas
+                </button>
+                <button
+                    onClick={() => setActiveSection("eventos")}
+                    className={`px-4 py-2 rounded-md transition ${activeSection === "eventos" 
+                        ? "bg-indigo-600 text-white" 
+                        : "bg-background hover:bg-primary"}`}
+                >
+                    Reportes de Eventos
+                </button>
+                <button
+                    onClick={() => setActiveSection("comentarios")}
+                    className={`px-4 py-2 rounded-md transition ${activeSection === "comentarios" 
+                        ? "bg-indigo-600 text-white" 
+                        : "bg-background hover:bg-primary"}`}
+                >
+                    Reportes de Comentarios
+                </button>
+            </nav>
+
+            {/* CONTENIDO DE LA SECCIÓN ACTIVA */}
+            {activeSection === "analiticas" && renderAnalyticsSection()}
+            {activeSection === "eventos" && renderEventsSection()}
+            {activeSection === "comentarios" && renderCommentsSection()}
 
             {/* global error */}
             {errorMessage && <div className="mt-4 p-3 bg-red-50 text-red-700 rounded">{errorMessage}</div>}
