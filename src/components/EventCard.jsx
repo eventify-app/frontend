@@ -44,6 +44,14 @@ const EventCard = ({
   const showDateRange =
     formattedDateEnd && formattedDate !== formattedDateEnd;
 
+  const formatHour = (h) => {
+    if (!h) return null;
+    return h.slice(0,5); // "22:00:00" → "22:00"
+  };
+
+  const formattedHour = formatHour(hour);
+  const formattedHourEnd = formatHour(hour_end);
+
   return (
     <article className="overflow-hidden flex flex-col flex-1 bg-card-background dark: rounded-xl gap-4 pb-6 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1">
 
@@ -99,7 +107,7 @@ const EventCard = ({
   </svg>
 
   <small className="text-sm">
-    {hour_end ? `${hour} a ${hour_end}` : hour}
+    {formattedHourEnd ? `${formattedHour} a ${formattedHourEnd}` : formattedHour}
   </small>
 </div>
 
