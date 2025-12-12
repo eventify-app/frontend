@@ -1,4 +1,4 @@
-import axiosInstance, { BACKEND_URL } from "../axiosInstance";
+import axiosInstance from "../axiosInstance";
 
 export const userService = {
   // =====================================================
@@ -31,7 +31,7 @@ export const userService = {
 
     return {
       ...res.data,
-      full_url: `${BACKEND_URL}${relativePath}`,
+      full_url: relativePath,
     };
   },
 

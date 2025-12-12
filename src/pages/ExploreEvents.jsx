@@ -189,6 +189,8 @@ const ExploreEventsPage = () => {
               description={event.description}
               date={event.start_date}
               hour={event.start_time}
+              date_end={event.end_date}
+              hour_end={event.end_time}
               location={event.place}
               image={event.cover_image}
               onJoin={() => navigate(`/event/${event.id}`)}
@@ -196,6 +198,7 @@ const ExploreEventsPage = () => {
               is_enrolled={event.is_enrolled}
               max_capacity={event.max_capacity}
               creator={event.id_creator.username}
+              creator_id={event.id_creator.id}
             />
           ))
         )}

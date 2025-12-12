@@ -84,7 +84,7 @@ const Header = () => {
               to="/explorer"
               className={({ isActive }) =>
                 `hover:bg-amber-100 rounded-lg px-4 py-2 ${
-                  isActive ? "bg-indigo-600 text-white" : ""
+                  isActive ? "bg-indigo-600 text-white hover:text-primary" : ""
                 }`
               }
             >
@@ -95,7 +95,7 @@ const Header = () => {
               to="/calendar"
               className={({ isActive }) =>
                 `hover:bg-amber-100 rounded-lg px-4 py-2 ${
-                  isActive ? "bg-indigo-600 text-white" : ""
+                  isActive ? "bg-indigo-600 text-white hover:text-primary" : ""
                 }`
               }
             >
@@ -106,7 +106,7 @@ const Header = () => {
               to="/my-events"
               className={({ isActive }) =>
                 `hover:bg-amber-100 rounded-lg px-4 py-2 ${
-                  isActive ? "bg-indigo-600 text-white" : ""
+                  isActive ? "bg-indigo-600 text-white hover:text-primary" : ""
                 }`
               }
             >
@@ -139,17 +139,17 @@ const Header = () => {
                   <img
                     src={avatar}
                     alt="Avatar"
-                    className="h-8 w-8 rounded-full border-2 border-primary"
+                    className="h-8 w-8 cursor-pointer rounded-full border-2 border-primary"
                   />
                 </button>
 
                 {openAvatarMenu && (
-                  <div className="absolute right-0 mt-2 w-44 bg-white rounded-md shadow-lg z-50 py-2">
+                  <div className="absolute right-0 mt-2 w-44 bg-card-background rounded-md shadow-lg z-50 py-2">
                     {userId && (
                       <NavLink
                         to={`/profile/${userId}`}
                         onClick={() => setOpenAvatarMenu(false)}
-                        className="block px-4 py-2 text-sm hover:bg-gray-100"
+                        className="block px-4 py-2 text-sm hover:bg-primary"
                       >
                         Ver perfil
                       </NavLink>
@@ -158,14 +158,14 @@ const Header = () => {
                     <NavLink
                       to="/edit-account"
                       onClick={() => setOpenAvatarMenu(false)}
-                      className="block px-4 py-2 text-sm hover:bg-gray-100"
+                      className="block px-4 py-2 text-sm hover:bg-primary"
                     >
                       Editar cuenta
                     </NavLink>
 
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                      className="block w-full text-left px-4 cursor-pointer py-2 text-sm hover:bg-primary"
                     >
                       Cerrar sesión
                     </button>
