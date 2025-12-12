@@ -137,7 +137,11 @@ const ExploreEventsPage = () => {
         <span className="text-sm text-muted-foreground mb-1">Desde</span>
         <Calendar
           mode="single"
-          selected={filters.from_date ? new Date(filters.from_date) : undefined}
+          selected={
+            filters.from_date
+              ? new Date(filters.from_date + "T00:00:00")
+              : undefined
+          }
           onSelect={(date) =>
             setFilters((prev) => ({
               ...prev,
@@ -152,7 +156,11 @@ const ExploreEventsPage = () => {
         <span className="text-sm text-muted-foreground mb-1">Hasta</span>
         <Calendar
           mode="single"
-          selected={filters.to_date ? new Date(filters.to_date) : undefined}
+          selected={
+            filters.to_date
+              ? new Date(filters.to_date + "T00:00:00")
+              : undefined
+          }
           onSelect={(date) =>
             setFilters((prev) => ({
               ...prev,
