@@ -79,8 +79,6 @@ function App() {
           <Route path="/my-profile" element={<ProfilePage isCurrentUser />} />
           <Route path="/edit-account" element={<EditAccount />} />
 
-
-
           {/* Mis eventos (solo visible al usuario logueado) */}
           <Route path="/my-events" element={<MyEvents />} />
 

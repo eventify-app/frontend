@@ -15,7 +15,10 @@ const EventCard = ({
   hour,
   participants,
   max_capacity,
-  creator
+  creator,
+  creator_id,
+  date_end,
+  hour_end
 }) => {
   const defaultImage =
     image && image.trim() !== ""
@@ -29,6 +32,17 @@ const EventCard = ({
         year: "numeric",
       })
     : "Próximamente";
+    
+    const formattedDateEnd = date_end
+      ? new Date(date_end + "T00:00:00").toLocaleDateString("es-CO", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      : null;
+
+  const showDateRange =
+    formattedDateEnd && formattedDate !== formattedDateEnd;
 
   return (
     <article className="overflow-hidden flex flex-col flex-1 bg-card-background dark: rounded-xl gap-4 pb-6 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1">
@@ -53,10 +67,42 @@ const EventCard = ({
 
           <div className="flex flex-col gap-1">
 
-            <div className="flex gap-1 items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-calendar h-4 w-4 text-primary" aria-hidden="true"><path d="M8 2v4"></path><path d="M16 2v4"></path><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M3 10h18"></path></svg>
-              <small className="text-sm">{formattedDate} - {hour}</small>
-            </div>
+            {/* Fecha */}
+<div className="flex gap-1 items-center">
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+    className="lucide lucide-calendar h-4 w-4 text-primary"
+    aria-hidden="true"
+  >
+    <path d="M8 2v4"></path>
+    <path d="M16 2v4"></path>
+    <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+    <path d="M3 10h18"></path>
+  </svg>
+
+  <small className="text-sm">
+    {showDateRange ? `${formattedDate} a ${formattedDateEnd}` : formattedDate}
+  </small>
+</div>
+
+{/* Horario */}
+<div className="flex gap-1 items-center">
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+    className="lucide lucide-clock h-4 w-4 text-primary"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="10"></circle>
+    <polyline points="12 6 12 12 16 14"></polyline>
+  </svg>
+
+  <small className="text-sm">
+    {hour_end ? `${hour} a ${hour_end}` : hour}
+  </small>
+</div>
+
 
             {location && (
               <div className="flex gap-1 items-center">
@@ -82,7 +128,13 @@ const EventCard = ({
             <div>
               <hr className="border-gray-300" />
               <small className="text-sm">Organiza: </small>
-              <small className="text-primary text-sm">{creator}</small>
+
+              <Link
+                to={`/profile/${creator_id}`}
+                className="text-primary text-sm hover:underline cursor-pointer"
+              >
+                {creator}
+              </Link>
             </div>
           ) }
           
