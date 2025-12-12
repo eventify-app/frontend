@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { eventService } from "../api/services/eventService";
 import { BACKEND_URL } from "@/api/axiosInstance";
+import { Link } from "react-router-dom"; // Importa Link
 
 export default function ParticipantsSection({ eventId, isOrganizer }) {
   const [participants, setParticipants] = useState([]);
@@ -53,15 +54,19 @@ export default function ParticipantsSection({ eventId, isOrganizer }) {
       <ul className="space-y-4">
         {participants.map((p) => (
           <li key={p.id} className="flex items-center gap-4">
-            <img
-              src={ `${BACKEND_URL}/media/${p.profile_photo}` || "/assets/avatar-profile.png"}
-              className="w-12 h-12 rounded-full object-cover border"
-              alt="avatar"
-            />
+            {/* Envolvemos el avatar con Link */}
+            <Link to={`/profile/${p.id}`}>
+              <img
+                src={ p.profile_photo || "/assets/avatar-profile.png"}
+                className="w-12 h-12 rounded-full object-cover border"
+                alt="avatar"
+              />
+            </Link>
 
-            <span className="text-gray-800">
+            {/* Envolvemos el nombre con Link */}
+            <Link to={`/profile/${p.id}`} className="text-muted">
               {p.first_name} {p.last_name}
-            </span>
+            </Link>
 
             {isOrganizer && !p.attended && (
               <button

@@ -5,16 +5,29 @@ import { RatingStars } from "../components/Rating";
 import { Button } from "@/components/ui/button";
 
 const Comment = ({ comment, onReport }) => {
+  // Extraemos las iniciales del autor
   const initials = comment.author
     .split(" ")
     .map((n) => n[0])
     .join("")
     .toUpperCase();
 
+  // Usamos el perfil si está disponible, sino usamos las iniciales
+  const profileImage = comment.profile_photo || null;
+
   return (
     <div className="flex gap-3 p-3 bg-card-background shadow-sm rounded-xl mb-4 border">
       <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
-        {initials}
+        {/* Si hay imagen de perfil, la mostramos, si no, mostramos las iniciales */}
+        {profileImage ? (
+          <img
+            src={profileImage}
+            alt="avatar"
+            className="w-full h-full rounded-full object-cover"
+          />
+        ) : (
+          initials
+        )}
       </div>
 
       <div className="flex-1">
@@ -40,8 +53,6 @@ const Comment = ({ comment, onReport }) => {
     </div>
   );
 };
-
-
 
 export default function EventFeedback({ eventId, userId, isOrganizer }) {
   const [rating, setRating] = useState(0);
@@ -145,49 +156,45 @@ export default function EventFeedback({ eventId, userId, isOrganizer }) {
   return (
     <section>
       {/* 🔥 Ocultar si es el organizador */}
-{!isOrganizer && (
-  <>
-    <h2 className="text-2xl font-bold mb-4">Tu opinión</h2>
+      {!isOrganizer && (
+        <>
+          <h2 className="text-2xl font-bold mb-4">Tu opinión</h2>
 
-    {/* Comentarios */}
-    <div className="mb-6">
-      <textarea
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        placeholder="Escribe tu comentario..."
-        className="w-full border rounded p-2"
-      />
-      <button
-        onClick={handleSubmitComment}
-        className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      >
-        Enviar comentario
-      </button>
-    </div>
+          {/* Comentarios */}
+          <div className="mb-6">
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Escribe tu comentario..."
+              className="w-full border rounded p-2"
+            />
 
-    {/* Rating */}
-<div className="mb-6 bg-card-background border p-5 rounded-xl shadow-sm">
-  <h3 className="font-semibold mb-2 text-lg">Califica este evento</h3>
+            <Button onClick={handleSubmitComment} className="mt-4 w-fit">
+              Enviar comentario
+            </Button>
+          </div>
 
-  <RatingStars rating={rating} onChange={setRating} />
+          {/* Rating */}
+          <div className="mb-6 bg-card-background border p-5 rounded-xl shadow-sm">
+            <h3 className="font-semibold mb-2 text-lg">Califica este evento</h3>
 
-  <Button
-    onClick={handleSubmitRating}
-    className="mt-4 w-fit"
-    disabled={!rating}
-  >
-    Enviar calificación
-  </Button>
-</div>
+            <RatingStars rating={rating} onChange={setRating} />
 
-    {error && <p className="text-red-500 mt-2">{error}</p>}
-  </>
-)}
+            <Button
+              onClick={handleSubmitRating}
+              className="mt-4 w-fit"
+              disabled={!rating}
+            >
+              Enviar calificación
+            </Button>
+          </div>
+
+          {error && <p className="text-red-500 mt-2">{error}</p>}
+        </>
+      )}
 
       {/* Lista de comentarios */}
-      <h3 className="text-lg font-semibold mt-8 mb-4">
-        Comentarios recientes
-      </h3>
+      <h3 className="text-lg font-semibold mt-8 mb-4">Comentarios recientes</h3>
 
       <div>
         {comments.map((c) => (
@@ -199,11 +206,12 @@ export default function EventFeedback({ eventId, userId, isOrganizer }) {
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card-background p-6 rounded-xl shadow-xl w-96">
-            <h3 className="text-lg font-semibold text-primary mb-3">Reportar comentario</h3>
+            <h3 className="text-lg font-semibold text-primary mb-3">
+              Reportar comentario
+            </h3>
 
             <p className="text-sm mb-3">
-              Estás reportando el comentario de{" "}
-              <b>{selectedComment?.author}</b>
+              Estás reportando el comentario de <b>{selectedComment?.author}</b>
             </p>
 
             <textarea

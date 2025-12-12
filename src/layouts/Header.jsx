@@ -1,55 +1,101 @@
-import { useState, useRef, useEffect } from "react"
-import { NavLink, useNavigate } from "react-router-dom"
-import { useAuth } from "../context/AuthContext"
-import { authService } from "../api/services/authService"
-import ThemeToggle from "../components/ThemeToggle"
-import { HiMenu, HiX } from "react-icons/hi"
+import { useState, useRef, useEffect } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { authService } from "../api/services/authService";
+import ThemeToggle from "../components/ThemeToggle";
+import { HiMenu, HiX } from "react-icons/hi";
+import { Bell } from "lucide-react";
+import { notificationService } from "../api/services/notificationService";
 
 const Header = () => {
-  const { token, user, setToken } = useAuth()
+  const { token, user, setToken } = useAuth();
 
-  // Datos del usuario directamente desde el contexto
-  const avatar = user?.profile_photo || "/assets/avatar-profile.png"
-  const userId = user?.id
-  const isAdmin = user?.is_admin === true
+  const avatar = user?.profile_photo || "/assets/avatar-profile.png";
+  const userId = user?.id;
+  const isAdmin = user?.is_admin === true;
 
-  const [openAvatarMenu, setOpenAvatarMenu] = useState(false)
-  const [openMobileMenu, setOpenMobileMenu] = useState(false)
+  const [openAvatarMenu, setOpenAvatarMenu] = useState(false);
+  const [openMobileMenu, setOpenMobileMenu] = useState(false);
 
-  const menuRef = useRef()
-  const mobileMenuRef = useRef()
-  const navigate = useNavigate()
+  const menuRef = useRef();
+  const mobileMenuRef = useRef();
+  const navigate = useNavigate();
 
+  // -----------------------
+  // 🔔 NOTIFICATIONS
+  // -----------------------
+  const [openNotifications, setOpenNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const notificationRef = useRef();
+
+  // Fetch notificaciones al abrir
+  useEffect(() => {
+    if (openNotifications) {
+      notificationService.getNotifications().then((data) => {
+        setNotifications(data.results);
+      });
+    }
+  }, [openNotifications]);
+
+  // Auto recarga cada 1 minuto SOLO si está abierto
+  useEffect(() => {
+    if (!openNotifications) return;
+
+    const interval = setInterval(() => {
+      notificationService.getNotifications().then((data) => {
+        setNotifications(data.results);
+      });
+    }, 60000); // 60s
+
+    return () => clearInterval(interval);
+  }, [openNotifications]);
+
+  const handleReadNotification = async (id) => {
+    await notificationService.markAsRead(id);
+
+    setNotifications((prev) =>
+      prev.map((n) =>
+        n.id === id ? { ...n, read: true, read_at: new Date().toISOString() } : n
+      )
+    );
+  };
+
+  // -----------------------
   // Cerrar al hacer clic fuera
+  // -----------------------
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setOpenAvatarMenu(false)
+        setOpenAvatarMenu(false);
       }
       if (
         mobileMenuRef.current &&
         !mobileMenuRef.current.contains(e.target) &&
         !e.target.closest(".mobile-menu-button")
       ) {
-        setOpenMobileMenu(false)
+        setOpenMobileMenu(false);
       }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
+      if (notificationRef.current && !notificationRef.current.contains(e.target)) {
+        setOpenNotifications(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
-    authService.logout()
-    setToken(null)
-    navigate("/")
-  }
+    authService.logout();
+    setToken(null);
+    navigate("/");
+  };
 
   return (
     <header className="fixed top-0 my-3 w-full rounded-2xl max-w-340 px-4 md:px-8 py-4 bg-card-background/75 border z-50">
       <div className="max-w-7xl flex justify-between m-auto items-center relative">
-
-        {/* ✔️ Mobile menu button solo usuarios normales */}
-        {token && !isAdmin && (
+        
+        {/* Mobile Menu Button (solo usuarios comunes) */}
+        {!isAdmin && (
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setOpenMobileMenu(!openMobileMenu)}
@@ -77,7 +123,7 @@ const Header = () => {
           </a>
         </div>
 
-        {/* Desktop menu (solo usuarios normales) */}
+        {/* Desktop menu (no admin) */}
         {token && !isAdmin && (
           <nav className="hidden md:flex items-center gap-2 text-sm font-bold text-primary flex-1 justify-center">
             <NavLink
@@ -115,12 +161,61 @@ const Header = () => {
           </nav>
         )}
 
-        {/* Right section */}
+        {/* Right */}
         <div className="flex gap-3 items-center">
 
           <ThemeToggle />
 
-          {/* ADMIN VIEW */}
+          {/* 🔔 NOTIFICATION ICON — AHORA TAMBIÉN PARA ADMIN */}
+          {token && (
+            <div className="relative" ref={notificationRef}>
+              <button
+                onClick={() => setOpenNotifications(!openNotifications)}
+                className="relative p-2 hover:bg-primary/10 rounded-full transition"
+              >
+                <Bell className="h-6 w-6 text-primary" />
+
+                {notifications.some((n) => !n.read) && (
+                  <span className="absolute top-1 right-1 h-2 w-2 bg-red-600 rounded-full"></span>
+                )}
+              </button>
+
+              {openNotifications && (
+                <div
+                  className="
+                    absolute right-0 mt-2 w-80 bg-card-background rounded-xl 
+                    shadow-lg border z-50 p-3 max-h-96 overflow-y-auto
+                    animate-slideFade
+                  "
+                >
+                  <h4 className="text-sm font-bold mb-2">Notificaciones</h4>
+
+                  {notifications.length === 0 ? (
+                    <p className="text-sm text-gray-500">No tienes notificaciones</p>
+                  ) : (
+                    notifications.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => handleReadNotification(item.id)}
+                        className={`
+                          w-full text-left p-3 rounded-lg mb-2 transition 
+                          ${item.read ? "text-gray-500" : "bg-primary/10"}
+                          hover:bg-primary/20
+                        `}
+                      >
+                        <p className="text-sm font-medium">{item.notification.description}</p>
+                        <span className="text-xs opacity-70">
+                          {new Date(item.notification.created_at).toLocaleString()}
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ADMIN OR USER AVATAR */}
           {token && isAdmin ? (
             <div className="flex items-center gap-4">
               <span className="text-lg font-bold text-red-600">Admin</span>
@@ -196,13 +291,13 @@ const Header = () => {
           )}
         </div>
 
-        {/* Mobile menu (no admin) */}
+        {/* Mobile menu */}
         {openMobileMenu && token && !isAdmin && (
           <div
             ref={mobileMenuRef}
-            className="md:hidden absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-lg border z-40"
+            className="md:hidden absolute top-full left-0 w-full mt-2 bg-card-background rounded-2xl shadow-lg border z-40"
           >
-            <div className="py-4 px-4 space-y-2">
+            <div className="py-4 px-4 space-y-2 flex flex-col">
               <NavLink to="/explorer" onClick={() => setOpenMobileMenu(false)}>
                 Explorar
               </NavLink>
@@ -213,7 +308,7 @@ const Header = () => {
                 Mis eventos
               </NavLink>
 
-              <div className="border-t pt-3 mt-2">
+              <div className="border-t pt-3 mt-2 flex flex-col">
                 {userId && (
                   <NavLink
                     to={`/profile/${userId}`}
@@ -240,9 +335,32 @@ const Header = () => {
             </div>
           </div>
         )}
+
+        {!token && openMobileMenu && (
+          <div
+            ref={mobileMenuRef}
+            className="md:hidden absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-lg border z-40"
+          >
+            <div className="py-4 px-4 space-y-2 text-center">
+              <a
+                href="/login"
+                className="block w-full py-2 text-primary font-semibold hover:text-primary/70"
+                onClick={() => setOpenMobileMenu(false)}
+              >
+                Ingresar
+              </a>
+
+              <a href="/register" onClick={() => setOpenMobileMenu(false)}>
+                <button className="w-full py-3 bg-primary text-white font-bold rounded-full hover:bg-primary/70">
+                  Registrarse
+                </button>
+              </a>
+            </div>
+          </div>
+        )}
       </div>
     </header>
-  )
-}
+  );
+};
 
-export default Header
+export default Header;

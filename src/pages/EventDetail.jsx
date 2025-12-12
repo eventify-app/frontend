@@ -139,10 +139,7 @@ const EventDetail = () => {
   const isOrganizer = user?.id === id_creator?.id;
 
   const formatDate = (dateStr) => {
-    const d = new Date(dateStr);
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear();
+    const [year, month, day] = dateStr.split("-");
     return `${day}/${month}/${year}`;
   };
 
@@ -244,21 +241,6 @@ const EventDetail = () => {
           >
             {/* Botones superiores */}
             <div className="flex justify-between px-4 md:pr-5">
-              {canGoBack && (
-                <Link
-                  onClick={() => {
-                    if (!document.startViewTransition) return handleGoBack();
-                    document.startViewTransition(() => handleGoBack());
-                  }}
-                  className="flex items-center shadow-lg gap-2 text-black font-medium py-2 px-3 w-fit rounded-xl bg-gray-100 hover:underline"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 mr-1">
-                    <path d="m12 19-7-7 7-7"></path>
-                    <path d="M19 12H5"></path>
-                  </svg>
-                  <span className="hidden sm:inline">Volver</span>
-                </Link>
-              )}
 
               <button
                 onClick={openReportModal}
@@ -404,7 +386,7 @@ const EventDetail = () => {
           </div>
 
           {/* Feedback (si el evento finalizó) */}
-          {is_finished && (
+          {true && (
             <div className="mt-6 md:row-start-5 lg:mt-0">
               <EventFeedback eventId={numericId} userId={user?.id} isOrganizer={isOrganizer} />
             </div>
