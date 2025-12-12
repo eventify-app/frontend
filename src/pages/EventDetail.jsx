@@ -139,10 +139,7 @@ const EventDetail = () => {
   const isOrganizer = user?.id === id_creator?.id;
 
   const formatDate = (dateStr) => {
-    const d = new Date(dateStr);
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear();
+    const [year, month, day] = dateStr.split("-");
     return `${day}/${month}/${year}`;
   };
 
@@ -404,7 +401,7 @@ const EventDetail = () => {
           </div>
 
           {/* Feedback (si el evento finalizó) */}
-          {is_finished && (
+          {true && (
             <div className="mt-6 md:row-start-5 lg:mt-0">
               <EventFeedback eventId={numericId} userId={user?.id} isOrganizer={isOrganizer} />
             </div>
