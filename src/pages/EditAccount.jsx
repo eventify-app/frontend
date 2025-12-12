@@ -100,7 +100,7 @@ const EditAccount = () => {
     setLoading(true);
     try {
       await userService.updateProfile(formData);
-      navigate("/profile");
+      navigate("/edit-account");
     } catch (err) {
       setError(err?.response?.data?.detail || "Error al actualizar el perfil");
     } finally {
